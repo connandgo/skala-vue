@@ -1,13 +1,15 @@
 import axios from 'axios'
 
-// TMDB 키는 선택 사항이다. 없으면 포스터만 생략되고 나머지는 그대로 동작한다.
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY
+// TMDB 인증은 선택 사항이다. 없으면 포스터만 생략되고 나머지는 그대로 동작한다.
+// v4 읽기 토큰(Bearer)을 쓴다. v3 키처럼 쿼리에 붙이지 않고 헤더로 보낸다.
+const TOKEN = import.meta.env.VITE_TMDB_TOKEN
 
-export const hasTmdbKey = Boolean(API_KEY)
+export const hasTmdbKey = Boolean(TOKEN)
 
 const api = axios.create({
   baseURL: 'https://api.themoviedb.org/3',
   timeout: 8000,
+  headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
 })
 
 /** 포스터 이미지 주소 (w185 = 가로 185px) */
@@ -22,7 +24,7 @@ const cache = new Map()
  * @param {string} openDt "2026-07-29" (있으면 연도로 후보를 좁힌다)
  */
 export const fetchPoster = async (title, openDt = '') => {
-  if (!API_KEY) return null
+  if (!TOKEN) return null
 
   const year = openDt.slice(0, 4)
   const cacheKey = `${title}|${year}`
@@ -31,7 +33,6 @@ export const fetchPoster = async (title, openDt = '') => {
   try {
     const { data } = await api.get('/search/movie', {
       params: {
-        api_key: API_KEY,
         query: title,
         language: 'ko-KR',
         ...(year ? { primary_release_year: year } : {}),
@@ -42,7 +43,7 @@ export const fetchPoster = async (title, openDt = '') => {
     let hit = data.results?.[0]
     if (!hit && year) {
       const retry = await api.get('/search/movie', {
-        params: { api_key: API_KEY, query: title, language: 'ko-KR' },
+        params: { query: title, language: 'ko-KR' },
       })
       hit = retry.data.results?.[0]
     }
