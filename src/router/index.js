@@ -33,6 +33,12 @@ const routes = [
     component: () => import('@/views/ChallengeView.vue'),
   },
   {
+    // 영화진흥위원회 박스오피스
+    path: '/movies',
+    name: 'BoxOffice',
+    component: () => import('@/views/BoxOfficeView.vue'),
+  },
+  {
     // 위 어디에도 걸리지 않은 모든 경로 (반드시 마지막)
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
