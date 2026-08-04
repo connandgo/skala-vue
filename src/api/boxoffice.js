@@ -88,6 +88,5 @@ export const bookingLinks = (title) => {
     { name: 'CGV', url: `http://www.cgv.co.kr/search/?query=${q}` },
     { name: '메가박스', url: `https://www.megabox.co.kr/movie?searchText=${q}` },
     { name: '롯데시네마', url: `https://www.lottecinema.co.kr/NLCHS/Movie` },
-    { name: '네이버', url: `https://search.naver.com/search.naver?query=${encodeURIComponent('영화 ' + title)}` },
   ]
 }

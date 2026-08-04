@@ -287,6 +287,14 @@ const restMax = computed(() =>
   padding: 16px;
   border: 1px solid var(--border);
   background: var(--bg);
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.card:hover {
+  border-color: var(--hover-border);
+  transform: translateY(-3px);
 }
 
 /* 1위만 테두리를 굵게 해서 시선을 잡는다 */
@@ -318,11 +326,17 @@ const restMax = computed(() =>
   overflow: hidden;
 }
 
+/* 카드에 마우스를 올리면 포스터가 살짝 확대된다 (틀 밖으로 넘치지 않음) */
+.card:hover .card-poster img {
+  transform: scale(1.05);
+}
+
 .card-poster img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.35s ease;
 }
 
 .poster-empty {
@@ -333,6 +347,12 @@ const restMax = computed(() =>
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+.card:hover .card-title,
+.row:hover .title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .card-title {
@@ -390,8 +410,18 @@ const restMax = computed(() =>
 .row {
   display: flex;
   gap: 14px;
-  padding: 16px 0;
+  padding: 16px 12px;
+  margin: 0 -12px;
   border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease;
+}
+
+.row:hover {
+  background: var(--bg-hover);
+}
+
+.row:hover .poster-sm {
+  border-color: var(--hover-border);
 }
 
 .row:first-child {
@@ -420,6 +450,7 @@ const restMax = computed(() =>
   border: 1px solid var(--border);
   background: var(--bg-subtle);
   flex-shrink: 0;
+  transition: border-color 0.15s ease;
 }
 
 .info {
@@ -510,10 +541,33 @@ const restMax = computed(() =>
   color: var(--text-muted);
 }
 
+.link {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
 .link:hover {
-  border-color: var(--hover-border);
-  background: var(--bg-hover);
-  color: var(--text);
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* 모션을 줄이도록 설정한 사용자에게는 움직임을 끈다 */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card-poster img,
+  .row,
+  .link {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+  .card:hover .card-poster img {
+    transform: none;
+  }
 }
 
 /* ---------------- 반응형 ---------------- */
