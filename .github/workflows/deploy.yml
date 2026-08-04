@@ -36,6 +36,7 @@ jobs:
         env:
           VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
           VITE_KOFIC_API_KEY: ${{ secrets.VITE_KOFIC_API_KEY }}
+          VITE_TMDB_API_KEY: ${{ secrets.VITE_TMDB_API_KEY }}
         run: npm run build
 
       - name: SPA 폴백 생성

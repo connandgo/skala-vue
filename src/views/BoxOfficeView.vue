@@ -7,6 +7,7 @@ import {
   toTargetDt,
   yesterday,
 } from '@/api/boxoffice.js'
+import { fetchPoster, hasTmdbKey } from '@/api/tmdb.js'
 
 const type = ref('daily') // 'daily' | 'weekly'
 const date = ref(yesterday())
@@ -21,6 +22,9 @@ const load = async () => {
   try {
     result.value = await fetchBoxOffice(type.value, date.value)
     console.log(`🎬 [KOFIC] ${result.value.label} ${result.value.range} · ${result.value.movies.length}편`)
+
+    // 포스터는 부가 정보라 목록을 먼저 보여주고 나중에 채운다 (있으면)
+    if (hasTmdbKey) loadPosters(result.value.movies)
   } catch (err) {
     console.error('❌ [KOFIC] 조회 실패:', err)
     errorMessage.value = err.message
@@ -28,6 +32,16 @@ const load = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+/** 포스터를 병렬로 받아 각 영화에 채워 넣는다 */
+const loadPosters = async (movies) => {
+  await Promise.all(
+    movies.map(async (m) => {
+      const info = await fetchPoster(m.name, m.openDt)
+      if (info?.poster) m.poster = info.poster
+    }),
+  )
 }
 
 onMounted(load)
@@ -71,6 +85,11 @@ const topAcc = computed(() =>
       <span v-if="result" class="range">{{ result.range }}</span>
     </div>
 
+    <p v-if="!hasTmdbKey" class="tmdb-notice">
+      ℹ️ 포스터를 표시하려면 <code>.env</code> 에 <code>VITE_TMDB_API_KEY</code> 를 넣으세요.
+      (없어도 순위 정보는 정상 표시됩니다)
+    </p>
+
     <p v-if="isLoading" class="state-msg">불러오는 중입니다…</p>
     <p v-else-if="errorMessage" class="state-msg error">{{ errorMessage }}</p>
 
@@ -84,6 +103,9 @@ const topAcc = computed(() =>
           <span v-else-if="m.rankInten < 0" class="inten down">▼{{ -m.rankInten }}</span>
           <span v-else class="inten flat">–</span>
         </div>
+
+        <!-- 포스터 (TMDB 키가 있을 때만) -->
+        <img v-if="m.poster" :src="m.poster" :alt="`${m.name} 포스터`" class="poster" loading="lazy" />
 
         <!-- 본문 -->
         <div class="info">
@@ -234,6 +256,31 @@ const topAcc = computed(() =>
   background: var(--text);
   color: var(--bg);
   font-weight: 700;
+}
+
+.poster {
+  width: 72px;
+  height: 104px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  flex-shrink: 0;
+}
+
+.tmdb-notice {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--text);
+  background: var(--bg-subtle);
+  font-size: 0.8rem;
+}
+
+.tmdb-notice code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border: 1px solid var(--border);
 }
 
 .info {
