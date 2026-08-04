@@ -19,6 +19,19 @@ export const toTargetDt = (date) => {
 /** "YYYYMMDD" -> "YYYY-MM-DD" */
 export const formatDt = (s) => `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`
 
+/**
+ * 주간 조회용 날짜 보정
+ *
+ * ⚠️ KOFIC 주간 박스오피스는 "완료된 주(월~일)"만 집계한다.
+ *    주 중간 날짜(예: 월요일)를 주면 결과가 0건으로 온다.
+ *    그래서 그 날짜가 속한 주의 직전 일요일로 맞춰 준다.
+ */
+export const lastSunday = (date) => {
+  const d = new Date(date)
+  d.setDate(d.getDate() - d.getDay()) // 일요일(0)이면 그대로, 아니면 이전 일요일로
+  return d
+}
+
 /** 어제 날짜 (박스오피스는 전일 집계가 확정본이다) */
 export const yesterday = () => {
   const d = new Date()
@@ -60,14 +73,18 @@ const normalize = (m) => ({
  * @param {Date} date 조회 기준일
  */
 export const fetchBoxOffice = async (type = 'daily', date = yesterday()) => {
-  const path = type === 'weekly' ? '/searchWeeklyBoxOfficeList.json' : '/searchDailyBoxOfficeList.json'
+  const isWeekly = type === 'weekly'
+  const path = isWeekly ? '/searchWeeklyBoxOfficeList.json' : '/searchDailyBoxOfficeList.json'
+
+  // 주간은 완료된 주만 조회되므로 직전 일요일로 보정한다
+  const target = isWeekly ? lastSunday(date) : date
 
   const { data } = await api.get(path, {
     params: {
       key: API_KEY,
-      targetDt: toTargetDt(date),
+      targetDt: toTargetDt(target),
       // 주간 조회 시 0=주간(월~일), 1=주말(금~일)
-      ...(type === 'weekly' ? { weekGb: '0' } : {}),
+      ...(isWeekly ? { weekGb: '0' } : {}),
     },
   })
 
@@ -76,7 +93,8 @@ export const fetchBoxOffice = async (type = 'daily', date = yesterday()) => {
 
   return {
     label: result.boxofficeType, // "일별 박스오피스" 등
-    range: result.showRange, // "20260803~20260803"
+    // 집계가 없는 기간이면 showRange 자체가 응답에 없다
+    range: result.showRange ?? null,
     movies: list.map(normalize),
   }
 }

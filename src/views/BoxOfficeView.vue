@@ -82,11 +82,16 @@ const restMax = computed(() =>
         <button :class="{ on: type === 'weekly' }" @click="type = 'weekly'">주간</button>
       </div>
       <input v-model="dateInput" type="date" :max="maxDate" />
-      <span v-if="result" class="range">{{ result.range }}</span>
+      <span v-if="result?.range" class="range">{{ result.range }}</span>
+      <span v-if="type === 'weekly'" class="hint">주간은 완료된 주(월~일)만 집계됩니다</span>
     </div>
 
     <p v-if="isLoading" class="state-msg">불러오는 중입니다…</p>
     <p v-else-if="errorMessage" class="state-msg error">{{ errorMessage }}</p>
+
+    <p v-else-if="result && !result.movies.length" class="state-msg">
+      해당 기간의 집계 결과가 없습니다. 다른 날짜를 선택해 보세요.
+    </p>
 
     <template v-else-if="result">
       <!-- ============ TOP 3 ============ -->
@@ -244,6 +249,11 @@ const restMax = computed(() =>
 
 .range {
   font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.hint {
   font-size: 0.72rem;
   color: var(--text-muted);
 }
