@@ -3,8 +3,9 @@ import { reactive } from 'vue'
 
 // 1. 객체형 reactive 상태
 const userReactive = reactive({
-  name: '이순신',
-  age: 30,
+  name: '이지수',
+  age: 24,
+  hobby: ['게임', '요리'],
 })
 const celebrateReactive = () => {
   userReactive.age++

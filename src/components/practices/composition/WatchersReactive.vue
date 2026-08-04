@@ -52,13 +52,13 @@ watch(
   font-weight: bold;
 }
 .auto {
-  border-color: #ff7675;
-  background: #fff5f5;
-  color: #c0392b;
+  border-color: var(--text);
+  background: var(--bg-subtle);
+  color: var(--text);
 }
 .target {
-  border-color: #00b894;
-  background: #e8f5e9;
-  color: #27ae60;
+  border-color: var(--text);
+  background: var(--bg-subtle);
+  color: var(--text);
 }
 </style>

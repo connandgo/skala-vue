@@ -32,8 +32,8 @@ watchEffect(() => {
 
 <style scoped>
 .monitor {
-  border-color: #e74c3c;
-  background: #fff5f5;
+  border-color: var(--text);
+  background: var(--bg-subtle);
   font-weight: bold;
 }
 </style>

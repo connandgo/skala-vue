@@ -20,3 +20,17 @@ defineProps({
     </p>
   </div>
 </template>
+
+<style scoped>
+/* 검색 영역 고유 디자인 (컴포넌트별 scoped 분리) */
+.search-inner input {
+  width: 100%;
+  max-width: 320px;
+}
+
+.search-inner p {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+</style>

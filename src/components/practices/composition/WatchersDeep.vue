@@ -52,12 +52,12 @@ watch(
 
 <style scoped>
 .monitor {
-  border-color: #0984e3;
-  background: #e3fafc;
+  border-color: var(--text);
+  background: var(--bg-subtle);
   font-weight: bold;
 }
 .target {
-  border-color: #6c5ce7;
-  background: #efe5ff;
+  border-color: var(--text);
+  background: var(--bg-subtle);
 }
 </style>

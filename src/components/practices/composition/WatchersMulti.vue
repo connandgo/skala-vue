@@ -41,7 +41,7 @@ watch([city, dateType], ([newCity, newDate], [oldCity, oldDate]) => {
 
 <style scoped>
 .monitor {
-  border-color: #00b894;
-  background: #e8f5e9;
+  border-color: var(--text);
+  background: var(--bg-subtle);
 }
 </style>

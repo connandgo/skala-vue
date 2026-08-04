@@ -19,8 +19,8 @@ const isVisible = ref(true)
 .box {
   padding: 10px;
   margin-top: 5px;
-  color: white;
-  border-radius: 5px;
-  background-color: #3498db; /* 파란색 */
+  color: var(--bg);
+  border-radius: 0;
+  background-color: var(--text); /* 파란색 */
 }
 </style>

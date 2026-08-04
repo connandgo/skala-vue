@@ -92,29 +92,29 @@ const runTask3 = async () => {
 
 <style scoped>
 .card {
-  background: #f9f9f9;
+  background: var(--bg-subtle);
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 20px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
 }
 button {
-  background: #409eff;
-  color: white;
+  background: var(--text);
+  color: var(--bg);
   border: none;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
   font-weight: bold;
 }
 button:hover {
-  background: #66b1ff;
+  background: var(--text);
 }
 .console {
-  background: #2d2d2d;
-  color: #67c23a;
+  background: var(--text);
+  color: var(--text);
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 0;
   margin-top: 12px;
   font-family: monospace;
   font-size: 14px;

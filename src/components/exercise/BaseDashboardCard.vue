@@ -6,10 +6,10 @@
 
 <style scoped>
 .base-dashboard-card {
-  background: #f8f9fa;
+  background: var(--bg-subtle);
   padding: 15px;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 15px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border);
 }
 </style>

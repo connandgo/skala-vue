@@ -67,7 +67,7 @@ const showDetail = (cityName, status) => {
         <button class="btn-detail" @click.stop="showDetail(item.name, item.status)">상세보기</button>
       </div>
 
-      <p v-if="filteredWeatherList.length === 0" style="text-align: center; color: #e74c3c; padding: 10px 0">😭 검색 결과와 일치하는 도시가 없습니다.</p>
+      <p v-if="filteredWeatherList.length === 0" class="empty-result">😭 검색 결과와 일치하는 도시가 없습니다.</p>
     </section>
 
     <div class="status-bar">

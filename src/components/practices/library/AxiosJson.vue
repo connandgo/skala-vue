@@ -120,20 +120,20 @@ onMounted(() => {
 input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 0;
 }
 button {
   padding: 8px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   font-weight: bold;
   cursor: pointer;
   font-size: 13px;
 }
 .btn-post {
-  background: #22c55e;
-  color: white;
+  background: var(--text);
+  color: var(--bg);
 }
 .item-list {
   list-style: none;
@@ -148,9 +148,9 @@ button {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0;
 }
 .content {
   display: flex;
@@ -161,12 +161,12 @@ button {
 .id-tag {
   font-size: 11px;
   font-weight: bold;
-  color: #64748b;
+  color: var(--text-muted);
 }
 .title-text {
   margin: 0;
   font-size: 14px;
-  color: #334155;
+  color: var(--text);
   text-transform: capitalize;
 }
 .btn-group {
@@ -174,12 +174,12 @@ button {
   gap: 4px;
 }
 .btn-put {
-  background: #eab308;
-  color: white;
+  background: var(--text);
+  color: var(--bg);
 }
 .btn-delete {
-  background: #ef4444;
-  color: white;
+  background: var(--text);
+  color: var(--bg);
 }
 button:hover {
   opacity: 0.9;

@@ -39,10 +39,10 @@ onUnmounted(() => {
 
 <style scoped>
 .counter-display {
-  background: #e3fafc;
+  background: var(--bg-subtle);
   padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #99e9f2;
+  border-radius: 0;
+  border: 1px solid var(--border);
   text-align: center;
 }
 </style>

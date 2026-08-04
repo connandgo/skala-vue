@@ -23,14 +23,14 @@ const themeClass = ref('bg-dark') // 배열 바인딩용 고정 클래스
   font-weight: bold;
 }
 .bg-dark {
-  background-color: #333;
-  color: white;
+  background-color: var(--text);
+  color: var(--bg);
   padding: 15px;
 }
 .border-red {
   border: 3px solid red;
 }
 .border-gray {
-  border: 3px solid #ccc;
+  border: 3px solid var(--border);
 }
 </style>

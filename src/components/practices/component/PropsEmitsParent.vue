@@ -28,10 +28,10 @@ const handleUpdateRequest = (newValue) => {
 
 <style scoped>
 .parent-container {
-  border: 2px solid #2ecc71;
+  border: 2px solid var(--text);
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: var(--bg-subtle);
   margin: 0 auto;
-  border-radius: 8px;
+  border-radius: 0;
 }
 </style>

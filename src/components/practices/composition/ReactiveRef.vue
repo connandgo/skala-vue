@@ -6,8 +6,8 @@ const name = ref('홍길동')
 const isActive = ref(true)
 const items = ref(['사과', '배'])
 const user = ref({
-  name: '이순신',
-  age: 30,
+  name: '이지수',
+  age: 24,
 })
 
 const increaseRef = () => {

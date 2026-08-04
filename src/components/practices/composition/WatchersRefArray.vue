@@ -49,9 +49,9 @@ watch(
   font-weight: bold;
 }
 .text {
-  color: #0984e3;
+  color: var(--text);
 }
 .object {
-  color: #6c5ce7;
+  color: var(--text);
 }
 </style>

@@ -30,9 +30,9 @@ const sendNotification = () => {
 
 <style scoped>
 .child-container {
-  border: 2px dashed #3498db;
+  border: 2px dashed var(--text);
   padding: 20px;
-  background-color: #fff;
-  border-radius: 6px;
+  background-color: var(--bg-subtle);
+  border-radius: 0;
 }
 </style>
