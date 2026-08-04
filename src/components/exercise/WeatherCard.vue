@@ -1,6 +1,10 @@
 <script setup>
+import { computed } from 'vue'
+import { useConfigStore } from '@/stores/configStore'
+import { toDisplayTemp } from '@/utils/temperature.js'
+
 // 1. 상위로부터 단방향 주입받을 객체 데이터 규격 검수 (매크로)
-defineProps({
+const props = defineProps({
   cityItem: {
     type: Object,
     required: true,
@@ -10,14 +14,19 @@ defineProps({
 // 2. 상위로 송신할 두 가지 경로의 커스텀 이벤트 식별자 등록 (매크로)
 // 선택 이벤트는 도시 객체를 통째로 올려보낸다 (지도 마커와 동일한 규격)
 const emit = defineEmits(['select-card', 'click-detail'])
+
+// 요구사항 3) 설정된 단위로 변환해서 표시 (원본 데이터는 항상 섭씨)
+const configStore = useConfigStore()
+const displayTemp = computed(() => toDisplayTemp(props.cityItem.temp, configStore.unit))
+const displayFeels = computed(() => toDisplayTemp(props.cityItem.feelsLike, configStore.unit))
 </script>
 
 <template>
   <div class="weather-card" @click="emit('select-card', cityItem)">
     <h4>{{ cityItem.name }} ({{ cityItem.status }})</h4>
     <p>
-      현재 기온: {{ cityItem.temp }}°C
-      <span v-if="cityItem.feelsLike != null"> · 체감 {{ cityItem.feelsLike }}°C</span>
+      현재 기온: {{ displayTemp }}{{ configStore.unitSymbol }}
+      <span v-if="cityItem.feelsLike != null"> · 체감 {{ displayFeels }}{{ configStore.unitSymbol }}</span>
       <span v-if="cityItem.humidity != null"> · 습도 {{ cityItem.humidity }}%</span>
     </p>
 

@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 import { compareToNormal } from '@/data/normals.js'
+import { useConfigStore } from '@/stores/configStore'
+import { toDisplayTemp } from '@/utils/temperature.js'
 
 // 선택된 도시 하나의 상세 정보만 표시한다 (props)
 const props = defineProps({
@@ -17,6 +19,10 @@ const props = defineProps({
     default: false,
   },
 })
+
+// 요구사항 3) 상세 화면의 모든 기온을 설정 단위로 표시
+const configStore = useConfigStore()
+const conv = (c) => toDisplayTemp(c, configStore.unit)
 
 /** 유닉스 시간(초) -> "HH:MM" */
 const toTime = (unix) =>
@@ -60,10 +66,12 @@ const metrics = computed(() => {
   const c = props.cityItem
   if (!c) return []
   return [
-    { label: '체감온도', value: `${c.feelsLike}°C` },
+    { label: '체감온도', value: `${conv(c.feelsLike)}${configStore.unitSymbol}` },
     {
       label: '24시간 최저/최고',
-      value: range.value ? `${range.value.min}° / ${range.value.max}°` : '-',
+      value: range.value
+        ? `${conv(range.value.min)}° / ${conv(range.value.max)}°`
+        : '-',
     },
     { label: '강수량', value: c.rain > 0 ? `${c.rain} mm` : '없음' },
     { label: '적설량', value: c.snow > 0 ? `${c.snow} mm` : '없음' },
@@ -99,8 +107,8 @@ const metrics = computed(() => {
         </p>
       </div>
       <div class="detail-temp">
-        <span class="temp-value">{{ cityItem.temp }}</span>
-        <span class="temp-unit">°C</span>
+        <span class="temp-value">{{ conv(cityItem.temp) }}</span>
+        <span class="temp-unit">{{ configStore.unitSymbol }}</span>
       </div>
     </div>
 
@@ -119,7 +127,7 @@ const metrics = computed(() => {
       <div v-else-if="forecast.length" class="forecast-row">
         <div v-for="(f, i) in forecast" :key="i" class="forecast-item">
           <span class="f-time">{{ f.time }}</span>
-          <span class="f-temp">{{ f.temp }}°</span>
+          <span class="f-temp">{{ conv(f.temp) }}°</span>
           <span class="f-pop" :class="{ wet: f.pop >= 30 }">{{ f.pop }}%</span>
         </div>
       </div>

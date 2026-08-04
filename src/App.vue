@@ -5,6 +5,7 @@ import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
 import { RouterLink, RouterView } from 'vue-router'
+import UnitToggler from '@/components/exercise/UnitToggler.vue'
 
 /* ---------------- 다크 / 라이트 모드 ---------------- */
 // index.html에서 미리 적용해 둔 클래스를 초기값으로 읽는다
@@ -38,6 +39,9 @@ watch(isDark, (dark) => {
       </ul>
 
       <div class="nav-actions">
+        <!-- 요구사항 2) Navigation Bar 옆 단위 전환 -->
+        <UnitToggler />
+
         <button
           class="icon-btn"
           :aria-label="isDark ? '라이트 모드로' : '다크 모드로'"

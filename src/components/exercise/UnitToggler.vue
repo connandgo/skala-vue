@@ -1,25 +1,41 @@
 <script setup>
+// 요구사항 1) 단위 설정을 변경하는 UI
 import { useConfigStore } from '@/stores/configStore'
+
 const configStore = useConfigStore()
 </script>
 
 <template>
-  <div style="text-align: center; margin-left: auto; display: inline-flex; align-items: center; gap: 8px">
-    <span
-      >날씨단위: <strong>{{ configStore.unit === 'celsius' ? '섭씨(℃)' : '화씨(℉)' }}</strong></span
+  <div class="unit-toggler">
+    <span class="unit-label">{{ configStore.unitSymbol }}</span>
+    <button
+      class="unit-btn"
+      :title="configStore.unit === 'celsius' ? '화씨로 변경' : '섭씨로 변경'"
+      @click="configStore.toggleUnit"
     >
-    <button @click="configStore.toggleUnit" class="toggle-btn">단위변경</button>
+      단위변경
+    </button>
   </div>
 </template>
 
 <style scoped>
-.toggle-btn {
-  padding: 6px 10px;
-  background-color: var(--text);
-  color: var(--bg);
-  border: none;
-  border-radius: 0;
-  cursor: pointer;
-  font-weight: bold;
+.unit-toggler {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.unit-label {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-width: 1.4em;
+  text-align: center;
+}
+
+.unit-btn {
+  margin: 0;
+  padding: 4px 9px;
+  font-size: 0.75rem;
 }
 </style>

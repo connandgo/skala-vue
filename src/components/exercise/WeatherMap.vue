@@ -3,6 +3,8 @@ import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { tempColor, readableInk, tempLegend } from '@/utils/tempScale.js'
+import { useConfigStore } from '@/stores/configStore'
+import { toDisplayTemp } from '@/utils/temperature.js'
 
 // 1. 부모로부터 지도에 찍을 날씨 목록과 선택된 도시를 전달받는다 (props)
 const props = defineProps({
@@ -18,6 +20,9 @@ const props = defineProps({
 
 // 2. 마커를 클릭하면 부모에게 알린다 (emits)
 const emit = defineEmits(['select-city'])
+
+// 요구사항 3) 마커에 찍히는 기온도 설정 단위를 따른다
+const configStore = useConfigStore()
 
 const mapEl = ref(null)
 let map = null
@@ -38,7 +43,7 @@ const makeIcon = (item, active) => {
     html: `
       <div class="weather-pin${active ? ' active' : ''}"
            style="background:${bg};color:${ink}">
-        <span class="pin-temp">${item.temp}°</span>
+        <span class="pin-temp">${toDisplayTemp(item.temp, configStore.unit)}°</span>
         <span class="pin-name">${item.name}</span>
       </div>`,
     iconSize: [56, 38],
@@ -55,7 +60,7 @@ const renderMarkers = () => {
     const marker = L.marker([item.lat, item.lon], {
       icon: makeIcon(item, item.id === props.selectedId),
       keyboard: true,
-      title: `${item.name} ${item.temp}°C ${item.status}`,
+      title: `${item.name} ${toDisplayTemp(item.temp, configStore.unit)}${configStore.unitSymbol} ${item.status}`,
     })
     marker.on('click', () => emit('select-city', item))
     marker.addTo(markerLayer)
@@ -106,6 +111,9 @@ onMounted(async () => {
 
 // 목록이나 선택이 바뀌면 마커를 다시 그린다
 watch(() => [props.cityItems, props.selectedId], renderMarkers, { deep: true })
+
+// 단위 전환 시 마커 라벨을 다시 그린다
+watch(() => configStore.unit, renderMarkers)
 
 // ⚠️ 컴포넌트가 사라질 때 지도와 감시자를 반드시 정리한다 (메모리 누수 방지)
 onUnmounted(() => {
