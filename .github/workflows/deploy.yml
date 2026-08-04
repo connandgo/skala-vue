@@ -35,6 +35,7 @@ jobs:
         # API 키는 저장소 Secrets에서 주입한다 (소스에는 남지 않는다)
         env:
           VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
+          VITE_KOFIC_API_KEY: ${{ secrets.VITE_KOFIC_API_KEY }}
         run: npm run build
 
       - name: SPA 폴백 생성
