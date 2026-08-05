@@ -1,5 +1,7 @@
 @import './base.css';
 @import './cursor.css';
+/* base.css 다음에 와야 --el-* 가 사이트 변수(--text 등)를 읽을 수 있다 */
+@import './element-theme.css';
 
 #app {
   padding-top: var(--nav-height);

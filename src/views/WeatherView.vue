@@ -1,6 +1,9 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
+// UI 라이브러리 실습 - 필요한 컴포넌트만 직접 가져온다 (전체 등록은 번들이 커진다)
+import { ElSkeleton, ElSkeletonItem } from 'element-plus'
+import 'element-plus/theme-chalk/el-skeleton.css'
 import RegionMap from '@/components/weather/RegionMap.vue'
 import CityPanel from '@/components/weather/CityPanel.vue'
 import CityTable from '@/components/weather/CityTable.vue'
@@ -47,6 +50,36 @@ const visibleCities = computed(() => {
 const selectedCity = computed(
   () => weatherList.value.find((c) => c.id === selectedId.value) ?? null,
 )
+
+/**
+ * 검색어를 받는다.
+ *
+ * v-model 대신 :value + @input 으로 받는 이유는 한글 때문이다.
+ * v-model 은 글자를 조합하는 동안(ㅅ → 서 → 서울) 값을 넘기지 않고
+ * 조합이 끝난 뒤에야 갱신한다. 그래서 타이핑 도중에는 목록이 걸러지지 않는다.
+ * @input 은 조합 중에도 그대로 들어오므로 한 글자씩 바로 반응한다.
+ */
+const onSearchInput = (event) => {
+  searchQuery.value = event.target.value
+}
+
+/**
+ * 검색 상태를 따라간다.
+ *
+ * watchEffect 는 감시 대상을 따로 적지 않는다.
+ * 안에서 읽은 반응형 값(searchQuery, visibleCities)을 스스로 구독한다.
+ *
+ * 기록은 개발 중에만 남긴다. 배포본에서 타이핑마다 로그가 쌓이면
+ * 보는 사람의 콘솔만 지저분해지고 도움은 되지 않는다.
+ */
+watchEffect(() => {
+  const query = searchQuery.value
+  const matched = visibleCities.value.length
+
+  if (import.meta.env.DEV) {
+    console.log(`[검색] "${query}" → ${matched}곳`)
+  }
+})
 
 /** 전국 평균/최고/최저 — 지금 한국이 어떤 상태인지 한 줄로 */
 const summary = computed(() => {
@@ -161,18 +194,24 @@ onMounted(loadWeather)
       <section class="pane pane-map">
         <div class="pane-head">
           <h2>지역 선택</h2>
+          <!-- 한글은 조합 중에도 들어와야 해서 v-model 대신 :value + @input 을 쓴다 -->
           <input
-            v-model="searchQuery"
+            :value="searchQuery"
             class="search"
             type="search"
             placeholder="지역 검색"
             aria-label="지역 검색"
+            @input="onSearchInput"
           />
         </div>
 
-        <p v-if="isLoading && !weatherList.length" class="state-msg">
-          날씨 데이터를 불러오는 중입니다…
-        </p>
+        <!-- 지도가 들어올 자리를 미리 잡아 둔다. 빈 화면보다 기다리기 낫다. -->
+        <ElSkeleton v-if="isLoading && !weatherList.length" class="map-skeleton" animated>
+          <template #template>
+            <ElSkeletonItem variant="rect" class="map-skeleton-box" />
+            <ElSkeletonItem variant="text" style="width: 40%" />
+          </template>
+        </ElSkeleton>
         <RegionMap
           v-else
           :city-items="visibleCities"
@@ -387,6 +426,17 @@ details[open] > summary {
   border-color: var(--text);
   background: var(--text);
   color: var(--bg);
+}
+
+/* ---------------- 로딩 자리 (el-skeleton) ---------------- */
+.map-skeleton {
+  padding: 8px 0;
+}
+
+/* 지도가 들어올 높이만큼 미리 잡아 둔다. 안 그러면 지도가 뜰 때 화면이 튄다. */
+.map-skeleton .map-skeleton-box {
+  height: 320px;
+  margin-bottom: 10px;
 }
 
 /* ---------------- 상태 메시지 ---------------- */

@@ -1,5 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
+// UI 라이브러리 실습 - 필요한 컴포넌트만 직접 가져온다 (전체 등록은 번들이 커진다)
+import { ElEmpty } from 'element-plus'
+import 'element-plus/theme-chalk/el-empty.css'
 import { useConfigStore } from '@/stores/configStore'
 import { toDisplayTemp } from '@/utils/temperature.js'
 import { tempColor, readableInk } from '@/utils/tempScale.js'
@@ -130,7 +133,13 @@ const sorted = computed(() => {
       </tbody>
     </table>
 
-    <p v-if="!items.length" class="empty">검색 결과와 일치하는 지역이 없습니다.</p>
+    <!-- 빈 상태는 Element Plus의 el-empty 를 쓴다 (그림까지 함께 나온다) -->
+    <ElEmpty
+      v-if="!items.length"
+      class="empty"
+      :image-size="72"
+      description="검색 결과와 일치하는 지역이 없습니다."
+    />
   </div>
 </template>
 
@@ -275,9 +284,12 @@ th.right button {
 
 .empty {
   padding: 24px 0;
+}
+
+/* el-empty 안쪽 글자를 표의 다른 글자와 같은 톤으로 맞춘다 */
+.empty :deep(.el-empty__description) {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--text-muted);
-  text-align: center;
 }
 </style>
