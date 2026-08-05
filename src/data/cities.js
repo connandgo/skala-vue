@@ -29,10 +29,12 @@ export const MOCK_WEATHER = {
   city_10: { temp: 27, feelsLike: 30, humidity: 78, pressure: 1009, windSpeed: 5.2, windDeg: 170, clouds: 40, visibility: 10000, rain: 0, snow: 0, status: '구름조금', weatherCode: 1 },
 }
 
-/** 도시 코드로 Mock 상세 데이터를 만들어 반환한다 */
 /**
- * 실시간 조회가 막혔을 때 대신 쓸 값.
- * 화면 구조가 실제 응답과 같아야 컴포넌트가 빈 화면을 그리지 않는다.
+ * 도시 코드로 Mock 상세 데이터를 만들어 반환한다.
+ *
+ * 실시간 조회가 막혔을 때 대신 쓸 값이다.
+ * 반환 모양이 실제 응답과 같아야 컴포넌트가 빈 화면을 그리지 않는다.
+ * (일별·시간별 배열까지 채워 주는 이유가 이것이다)
  */
 export const getMockWeather = (cityId) => {
   const city = CITIES.find((c) => c.id === cityId)
