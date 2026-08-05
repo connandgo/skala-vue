@@ -42,3 +42,7 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## 배경 이미지 출처
+
+`public/sky.jpg` — Wikimedia Commons, "Cloudscape, 2022-06-22, 01 bw.jpg" (CC0, 퍼블릭 도메인)

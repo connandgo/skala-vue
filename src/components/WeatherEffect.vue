@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
-import { lifePhase } from '@/utils/lifeState.js'
 
 // 'rain' | 'snow' | 'none'
 const props = defineProps({
@@ -10,8 +9,7 @@ const props = defineProps({
   },
 })
 
-// 배경 라이프가 도는 동안에는 입자를 그리지 않는다 (배경끼리 겹치지 않도록)
-const active = computed(() => props.mode !== 'none' && lifePhase.value === 'idle')
+const active = computed(() => props.mode !== 'none')
 
 const canvasRef = ref(null)
 let ctx = null

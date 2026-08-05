@@ -1,9 +1,32 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 
-const canvasRef = ref(null)
+/**
+ * 배경: 구름 사진을 8x8 Bayer 디더링한 하프톤 + 콘웨이의 라이프 게임.
+ *
+ * 흐름
+ *   무작위 노이즈에서 시작 -> 라이프 규칙으로 꿈틀거림
+ *   -> 사진의 픽셀이 랜덤 순서로 하나씩 "잠김"
+ *   -> 3초 뒤 사진과 정확히 일치한 채로 정지 (이후 CPU 사용 0)
+ *
+ * 사진 출처: Wikimedia Commons "Cloudscape, 2022-06-22, 01 bw.jpg" (CC0)
+ *
+ * 중요한 점
+ *   화면을 빈틈없이 칠한다. 밝은 픽셀도 사각형으로 그려야 인쇄물 같은 질감이 나온다.
+ *   켜진 칸만 반투명으로 찍으면 성긴 점만 흩어져 보인다.
+ */
 
-// 8x8 Bayer 행렬 - 순서 디더링(ordered dithering)의 임계값 표
+const PX = 4 // 도트 한 칸 크기
+const DARK = '#1f1f1f'
+const LIGHT = '#ffffff'
+const GAIN = 1.15 // 사진 대비
+const SRC = `${import.meta.env.BASE_URL}sky.jpg`
+
+const DURATION = 3000 // 애니메이션 길이(ms)
+const TICK = 110 // 세대 간격(ms). 60fps로 돌릴 이유가 없다
+const SEED_DENSITY = 0.32
+
+// 8x8 Bayer 행렬 - 밝기를 점의 밀도로 바꾸는 임계값 표
 const BAYER8 = [
   [0, 32, 8, 40, 2, 34, 10, 42],
   [48, 16, 56, 24, 50, 18, 58, 26],
@@ -15,91 +38,219 @@ const BAYER8 = [
   [63, 31, 55, 23, 61, 29, 53, 21],
 ]
 
-const PX = 4 // 도트 하나의 화면 크기(px)
-const DOT = 70 // 도트 색(0=검정, 255=흰색) - 낮출수록 진해진다
+const canvasRef = ref(null)
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-// 중앙은 밝고 가장자리로 갈수록 어두워지는 비네트 (콘텐츠 카드를 감싸는 형태)
-const GAMMA = 2.2
-const DEPTH = 0.85
+let image = null
+let ctx = null
+let cols = 0
+let rows = 0
+let w = 0
+let h = 0
 
-// 좌우 대칭을 깨서 자연스럽게 보이도록 하는 그늘 덩어리 [x, y, 반지름, 세기]
-const BLOBS = [
-  [0.18, 0.22, 0.45, 0.18],
-  [0.85, 0.78, 0.5, 0.16],
-  [0.72, 0.12, 0.35, 0.12],
-]
+let grid = new Uint8Array(0)
+let lockMap = new Uint8Array(0)
+let lockOrder = new Float32Array(0)
+let target = new Uint8Array(0)
 
-const draw = () => {
-  const canvas = canvasRef.value
-  if (!canvas) return
+let raf = null
+let resizeTimer = null
 
-  const w = window.innerWidth
-  const h = window.innerHeight
-  canvas.width = w
-  canvas.height = h
+/* ---------------------------------------------------------------- 사진 */
 
-  // 1) 저해상도 오프스크린에 명암 지도를 만든다
-  const lw = Math.ceil(w / PX)
-  const lh = Math.ceil(h / PX)
+/** 사진을 격자 크기로 줄이고 Bayer 디더링해 목표 그림을 만든다 */
+const buildTarget = () => {
   const off = document.createElement('canvas')
-  off.width = lw
-  off.height = lh
-  const octx = off.getContext('2d')
+  off.width = cols
+  off.height = rows
+  const octx = off.getContext('2d', { willReadFrequently: true })
 
-  const img = octx.createImageData(lw, lh)
-  const d = img.data
-  const cx0 = lw / 2
-  const cy0 = lh / 2
-  const maxD = Math.hypot(cx0, cy0)
-  const maxSide = Math.max(lw, lh)
+  // background-size: cover 와 같은 방식으로 화면을 채운다
+  const scale = Math.max(cols / image.width, rows / image.height)
+  const dw = image.width * scale
+  const dh = image.height * scale
+  octx.drawImage(image, (cols - dw) / 2, (rows - dh) / 2, dw, dh)
 
-  for (let y = 0; y < lh; y++) {
-    for (let x = 0; x < lw; x++) {
-      // 중심에서 멀어질수록 어두워지는 밝기 값
-      const dist = Math.hypot(x - cx0, y - cy0) / maxD
-      let v = 1 - DEPTH * Math.pow(dist, GAMMA)
+  const data = octx.getImageData(0, 0, cols, rows).data
+  target = new Uint8Array(cols * rows)
 
-      // 그늘 덩어리를 빼서 대칭을 깬다
-      for (const [bx, by, r, a] of BLOBS) {
-        const bd = Math.hypot(x - bx * lw, y - by * lh) / (r * maxSide)
-        if (bd < 1) v -= a * (1 - bd) ** 2
-      }
-      v = v < 0 ? 0 : v > 1 ? 1 : v
-
-      // 2) Bayer 행렬 임계값과 비교해 흑/백 두 단계로 결정
-      const threshold = (BAYER8[y & 7][x & 7] + 0.5) / 64
-      const on = v > threshold ? 255 : DOT
-
-      const i = (y * lw + x) * 4
-      d[i] = d[i + 1] = d[i + 2] = on
-      d[i + 3] = 255
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = (y * cols + x) * 4
+      let v = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255
+      v = (v - 0.5) * GAIN + 0.5
+      // 밝기가 이 칸의 임계값을 넘으면 밝은 픽셀
+      target[y * cols + x] = v > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
     }
   }
-  octx.putImageData(img, 0, 0)
-
-  // 3) 확대해서 도트를 뚜렷하게 (부드럽게 늘어나지 않도록 보간 끄기)
-  const ctx = canvas.getContext('2d')
-  ctx.imageSmoothingEnabled = false
-  ctx.clearRect(0, 0, w, h)
-  ctx.drawImage(off, 0, 0, lw, lh, 0, 0, lw * PX, lh * PX)
 }
 
-// 창 크기가 자주 바뀔 때 과하게 다시 그리지 않도록 지연 실행
-let timer = null
+/* ---------------------------------------------------------------- 규칙 */
+
+/**
+ * 한 세대 진행 (B3/S23)
+ *
+ * 잠긴 칸은 규칙을 적용하지 않고 그대로 1로 남긴다.
+ * 이 처리가 없으면 완성된 사진도 이웃 수에 따라 곧바로 무너진다.
+ * 가장자리는 토러스로 이어 붙여 경계에서 패턴이 죽지 않게 한다.
+ */
+const step = () => {
+  const next = new Uint8Array(grid.length)
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = y * cols + x
+
+      if (lockMap[idx]) {
+        next[idx] = 1
+        continue
+      }
+
+      let n = 0
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue
+          const ny = (y + dy + rows) % rows
+          const nx = (x + dx + cols) % cols
+          n += grid[ny * cols + nx]
+        }
+      }
+
+      next[idx] = grid[idx] ? (n === 2 || n === 3 ? 1 : 0) : n === 3 ? 1 : 0
+    }
+  }
+  grid = next
+}
+
+/**
+ * 사진을 progress(0~1)만큼 잠근다.
+ *
+ * lockOrder는 칸마다 다른 난수라, progress가 커질수록
+ * 랜덤한 위치부터 하나씩 굳는다. 그래서 사진이 한꺼번에 나타나지 않고
+ * 흩뿌려지듯 채워진다.
+ */
+const applyLock = (progress) => {
+  for (let i = 0; i < target.length; i++) {
+    if (target[i] === 1 && lockOrder[i] < progress) {
+      lockMap[i] = 1
+      grid[i] = 1
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- 렌더 */
+
+const render = () => {
+  // 어두운 색으로 전체를 깔고 밝은 픽셀만 위에 찍는다
+  // (칸마다 fillStyle을 바꾸지 않아 훨씬 빠르다)
+  ctx.fillStyle = DARK
+  ctx.fillRect(0, 0, w, h)
+
+  ctx.fillStyle = LIGHT
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = y * cols + x
+      if (lockMap[idx] || grid[idx]) {
+        ctx.fillRect(x * PX, y * PX, PX, PX)
+      }
+    }
+  }
+}
+
+const easeInOutQuad = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
+
+const stop = () => {
+  if (raf) cancelAnimationFrame(raf)
+  raf = null
+}
+
+/** 정지 시점에는 사진과 정확히 일치시킨다 (라이프 잔해 제거) */
+const settle = () => {
+  applyLock(1)
+  grid.set(target)
+  render()
+  stop()
+}
+
+const start = () => {
+  const canvas = canvasRef.value
+  if (!canvas || !image) return
+  stop()
+
+  w = window.innerWidth
+  h = window.innerHeight
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  canvas.width = Math.floor(w * dpr)
+  canvas.height = Math.floor(h * dpr)
+  ctx = canvas.getContext('2d')
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+  cols = Math.ceil(w / PX)
+  rows = Math.ceil(h / PX)
+
+  grid = new Uint8Array(cols * rows)
+  lockMap = new Uint8Array(cols * rows)
+  lockOrder = new Float32Array(cols * rows)
+  for (let i = 0; i < lockOrder.length; i++) lockOrder[i] = Math.random()
+
+  buildTarget()
+
+  // 모션을 줄이도록 설정한 사용자에게는 애니메이션 없이 결과만 보여준다
+  if (reduceMotion) {
+    settle()
+    return
+  }
+
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] = Math.random() < SEED_DENSITY ? 1 : 0
+  }
+
+  const startedAt = performance.now()
+  let lastTick = 0
+
+  const loop = (now) => {
+    const elapsed = now - startedAt
+    if (elapsed >= DURATION) {
+      settle() // rAF까지 멈춘다. 이후 CPU 사용 0
+      return
+    }
+    if (now - lastTick >= TICK) {
+      lastTick = now
+      step()
+      applyLock(easeInOutQuad(elapsed / DURATION))
+      render()
+    }
+    raf = requestAnimationFrame(loop)
+  }
+  raf = requestAnimationFrame(loop)
+}
+
 const onResize = () => {
-  clearTimeout(timer)
-  timer = setTimeout(draw, 150)
+  clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(start, 200)
+}
+
+const onVisibility = () => {
+  if (document.hidden) settle()
 }
 
 onMounted(() => {
-  draw()
+  image = new Image()
+  image.onload = start
+  // 사진을 못 불러오면 배경 없이 둔다 (화면이 깨지지는 않는다)
+  image.onerror = () => console.warn('[배경] 구름 이미지를 불러오지 못했습니다:', SRC)
+  image.src = SRC
+
   window.addEventListener('resize', onResize)
+  document.addEventListener('visibilitychange', onVisibility)
 })
 
-// 컴포넌트가 사라질 때 이벤트를 반드시 정리한다 (메모리 누수 방지)
 onUnmounted(() => {
-  clearTimeout(timer)
+  stop()
+  clearTimeout(resizeTimer)
   window.removeEventListener('resize', onResize)
+  document.removeEventListener('visibilitychange', onVisibility)
+  if (image) image.onload = null
 })
 </script>
 

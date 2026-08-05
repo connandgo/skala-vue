@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import LifeBackdrop from '@/components/LifeBackdrop.vue'
+import DitherBackdrop from '@/components/DitherBackdrop.vue'
 import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
@@ -19,8 +19,8 @@ watch(isDark, (dark) => {
 </script>
 
 <template>
-  <!-- 배경: 라이프 게임 (라우트가 바뀔 때 3초간 움직인 뒤 정지) -->
-  <LifeBackdrop />
+  <!-- 배경: 구름 사진을 디더링한 정적 하프톤 -->
+  <DitherBackdrop />
   <!-- 선택한 지역이 비/눈이면 화면 전체에 내리는 효과 -->
   <WeatherEffect :mode="fxMode" />
 
@@ -110,6 +110,11 @@ watch(isDark, (dark) => {
 /* 배경이 보이도록 페이지 자체는 투명하게 두고, 다크모드에선 도트를 반전 */
 body {
   background: transparent;
+}
+
+/* 다크모드는 배경을 통째로 반전시킨다 (레퍼런스와 동일한 방식) */
+.theme-dark .shader-bg {
+  filter: invert(1);
 }
 
 
