@@ -363,6 +363,36 @@ const SHAPES = {
     ctx.fillStyle = flare
     ctx.fillRect(cx, cy - R, R * 1.1, R)
     ctx.globalCompositeOperation = 'source-over'
+
+    /* -------- 오른쪽으로 뻗는 전파 -------- */
+    // 지구본에서 소식이 퍼져 나가는 결. 오른쪽이 비어 보이지 않게 채운다.
+    // 길이와 두께를 제각각 두어야 규칙적인 줄무늬로 보이지 않는다.
+    const streaks = [
+      // [세로 위치, 시작 x, 끝 x, 두께 배수, 밝기]
+      [0.12, 0.55, 1.02, 1.6, 0.92],
+      [0.2, 0.72, 1.02, 0.9, 0.6],
+      [0.28, 0.4, 0.98, 2.4, 1],
+      [0.35, 0.78, 1.02, 0.8, 0.5],
+      [0.44, 0.6, 1.02, 1.2, 0.78],
+      [0.56, 0.34, 1.02, 3, 1],
+      [0.63, 0.8, 1.0, 0.8, 0.55],
+      [0.71, 0.52, 1.02, 1.4, 0.85],
+      [0.8, 0.68, 1.02, 1, 0.66],
+      [0.9, 0.45, 1.02, 2, 0.95],
+    ]
+
+    ctx.globalCompositeOperation = 'lighten'
+    for (const [y, x0, x1, weight, bright] of streaks) {
+      const thick = Math.max(1, r * 0.006 * weight)
+      // 왼쪽 끝은 배경에 녹고 오른쪽으로 갈수록 밝아진다
+      const g2 = ctx.createLinearGradient(x0 * c, 0, x1 * c, 0)
+      g2.addColorStop(0, tone(BG_TONE))
+      g2.addColorStop(0.65, tone(BG_TONE + (bright - BG_TONE) * 0.5))
+      g2.addColorStop(1, tone(bright))
+      ctx.fillStyle = g2
+      ctx.fillRect(x0 * c, y * r, (x1 - x0) * c, thick)
+    }
+    ctx.globalCompositeOperation = 'source-over'
   },
 
   // 소개(메인) - 셸 프롬프트.
