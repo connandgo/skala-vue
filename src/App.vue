@@ -1,11 +1,15 @@
 <script setup>
 import { ref, watch } from 'vue'
 import DitherBackdrop from '@/components/DitherBackdrop.vue'
+import LifeIntro from '@/components/LifeIntro.vue'
 import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
 import { RouterLink, RouterView } from 'vue-router'
 import UnitToggler from '@/components/exercise/UnitToggler.vue'
+
+// 최초 진입 인트로 (세션당 1회)
+const showIntro = ref(true)
 
 /* ---------------- 다크 / 라이트 모드 ---------------- */
 // index.html에서 미리 적용해 둔 클래스를 초기값으로 읽는다
@@ -19,7 +23,10 @@ watch(isDark, (dark) => {
 </script>
 
 <template>
-  <!-- 배경: 구름 사진을 디더링한 정적 하프톤 -->
+  <!-- 최초 진입 인트로: SKALA 글자가 라이프 규칙으로 흩어진다 -->
+  <LifeIntro v-if="showIntro" @done="showIntro = false" />
+
+  <!-- 배경: 구름 사진을 디더링한 하프톤 -->
   <DitherBackdrop />
   <!-- 선택한 지역이 비/눈이면 화면 전체에 내리는 효과 -->
   <WeatherEffect :mode="fxMode" />
