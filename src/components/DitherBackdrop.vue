@@ -52,34 +52,26 @@ const BG_TONE = 0.3
 const FG_TONE = 0.95
 
 const SHAPES = {
-  // 영화 - 영사기가 스크린을 비춘다.
+  // 영화 - 영사기가 빛을 쏜다.
   // 위쪽에 필름 띠가 비스듬히 지나가고, 왼쪽 아래 영사기에서
-  // 빛이 퍼져 오른쪽 스크린에 닿는다.
+  // 가는 빛줄기가 오른쪽으로 뻗으며 서서히 옅어진다.
+  // (스크린을 밝은 면으로 깔면 오른쪽 절반이 통째로 하얘져서 넣지 않는다)
   movies: (ctx, c, r) => {
     const ink = tone(FG_TONE)
-
-    /* -------- 스크린 (가장 밝은 면) -------- */
-    ctx.fillStyle = tone(1)
-    ctx.beginPath()
-    ctx.moveTo(c * 0.47, r * 0.24)
-    ctx.lineTo(c * 1.02, r * 0.16)
-    ctx.lineTo(c * 1.02, r * 0.9)
-    ctx.lineTo(c * 0.47, r * 0.82)
-    ctx.closePath()
-    ctx.fill()
 
     /* -------- 빛줄기 -------- */
     // 렌즈 끝에서 스크린 네 귀퉁이로 퍼진다
     const lensX = c * 0.2
     const lensY = r * 0.79
-    const beam = ctx.createLinearGradient(lensX, lensY, c * 0.47, lensY)
-    beam.addColorStop(0, tone(0.55))
-    beam.addColorStop(1, tone(0.88))
+    const beam = ctx.createLinearGradient(lensX, lensY, c, lensY)
+    beam.addColorStop(0, tone(0.9))
+    beam.addColorStop(0.45, tone(0.6))
+    beam.addColorStop(1, tone(BG_TONE))
     ctx.fillStyle = beam
     ctx.beginPath()
     ctx.moveTo(lensX, lensY)
-    ctx.lineTo(c * 0.47, r * 0.48)
-    ctx.lineTo(c * 0.47, r * 0.74)
+    ctx.lineTo(c, r * 0.42)
+    ctx.lineTo(c, r * 0.78)
     ctx.closePath()
     ctx.fill()
 
