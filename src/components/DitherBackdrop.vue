@@ -64,8 +64,8 @@ const SHAPES = {
     const lensX = c * 0.2
     const lensY = r * 0.79
     const beam = ctx.createLinearGradient(lensX, lensY, c, lensY)
-    beam.addColorStop(0, tone(0.9))
-    beam.addColorStop(0.45, tone(0.6))
+    beam.addColorStop(0, tone(1))
+    beam.addColorStop(0.5, tone(0.88))
     beam.addColorStop(1, tone(BG_TONE))
     ctx.fillStyle = beam
     ctx.beginPath()
@@ -75,31 +75,51 @@ const SHAPES = {
     ctx.closePath()
     ctx.fill()
 
-    /* -------- 필름 띠 (비스듬히) -------- */
-    ctx.save()
-    ctx.translate(0, r * 0.1)
-    ctx.rotate(-0.11) // 오른쪽으로 갈수록 살짝 올라간다
-    const bandH = r * 0.26
+    /* -------- 필름 띠 (구불구불 흐른다) -------- */
+    const bandH = r * 0.24
     const rail = bandH * 0.2
 
+    /** 가로 위치(0~1)에 따른 띠의 세로 위치 */
+    const filmY = (t) => r * (0.17 + Math.sin(t * Math.PI * 1.7 - 0.4) * 0.07 - t * 0.02)
+    /** 그 지점의 기울기 (구멍과 칸을 띠와 나란히 눕히는 데 쓴다) */
+    const filmSlope = (t) => {
+      const d = 0.004
+      return (filmY(t + d) - filmY(t - d)) / (d * 2 * c)
+    }
+
+    // 위 모서리를 따라가고, 아래 모서리를 되짚어 와서 면을 닫는다
     ctx.fillStyle = tone(0.55)
-    ctx.fillRect(-c * 0.1, 0, c * 1.3, bandH)
+    ctx.beginPath()
+    for (let t = -0.06; t <= 1.06; t += 0.02) ctx.lineTo(t * c, filmY(t))
+    for (let t = 1.06; t >= -0.06; t -= 0.02) ctx.lineTo(t * c, filmY(t) + bandH)
+    ctx.closePath()
+    ctx.fill()
+
+    /** 띠 위의 한 지점에 눕혀서 그린다 */
+    const onFilm = (t, draw) => {
+      ctx.save()
+      ctx.translate(t * c, filmY(t))
+      ctx.rotate(Math.atan(filmSlope(t)))
+      draw()
+      ctx.restore()
+    }
 
     // 위아래 레일의 스프로킷 구멍
     ctx.fillStyle = tone(BG_TONE - 0.08)
-    const hw = c * 0.022
-    const hh = rail * 0.62
-    for (let x = -c * 0.08; x < c * 1.25; x += c * 0.048) {
-      ctx.fillRect(x, rail * 0.2, hw, hh)
-      ctx.fillRect(x, bandH - rail * 0.82, hw, hh)
+    const hw = c * 0.02
+    const hh = rail * 0.6
+    for (let t = -0.05; t < 1.05; t += 0.036) {
+      onFilm(t, () => {
+        ctx.fillRect(0, rail * 0.2, hw, hh)
+        ctx.fillRect(0, bandH - rail * 0.8, hw, hh)
+      })
     }
 
     // 가운데 화면 칸
-    ctx.fillStyle = tone(0.4)
-    for (let x = -c * 0.08; x < c * 1.25; x += c * 0.145) {
-      ctx.fillRect(x, rail * 1.35, c * 0.125, bandH - rail * 2.7)
+    ctx.fillStyle = tone(0.38)
+    for (let t = -0.04; t < 1.05; t += 0.108) {
+      onFilm(t, () => ctx.fillRect(0, rail * 1.35, c * 0.092, bandH - rail * 2.7))
     }
-    ctx.restore()
 
     /* -------- 영사기 -------- */
     const R = r * 0.1 // 릴 반지름
