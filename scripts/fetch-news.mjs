@@ -124,13 +124,11 @@ const toParagraphs = (html) =>
     }))
     .filter((p) => p.text.length > 10)
 
-/** GeekNews Weekly 최신 호를 통째로 가져온다 */
-const fetchWeekly = async () => {
-  const index = await get(WEEKLY_INDEX)
-  const slugs = [...new Set([...index.matchAll(/\/weekly\/(\d{6})/g)].map((m) => m[1]))]
-  if (!slugs.length) throw new Error('주간 호수를 찾지 못했습니다.')
+/** 에디터 글이 AI·데이터 이야기인지 본다 */
+const AI_EDITORIAL = /(\bAI\b|LLM|GPT|Claude|Gemini|에이전트|인공지능|머신러닝|딥러닝|데이터|모델)/i
 
-  const slug = slugs.sort().reverse()[0]
+/** 한 호를 통째로 읽는다 */
+const parseIssue = async (slug) => {
   const url = `${WEEKLY_INDEX}/${slug}`
   const page = await get(url)
 
@@ -139,10 +137,8 @@ const fetchWeekly = async () => {
   const issue = rawTitle.match(/\[(GN#\d+)\]/)?.[1] ?? ''
   const title = rawTitle.replace(/^\[GN#\d+\]\s*/, '')
 
-  // 에디터 글
-  const editorialHtml = page.match(
-    /<div class=['"]desc weekly-editorial['"]>([\s\S]*?)<\/div>/,
-  )?.[1] ?? ''
+  const editorialHtml =
+    page.match(/<div class=['"]desc weekly-editorial['"]>([\s\S]*?)<\/div>/)?.[1] ?? ''
 
   // 주요 뉴스 기간 ("2026-07-27 – 2026-08-02")
   const period = stripTags(
@@ -159,9 +155,55 @@ const fetchWeekly = async () => {
     summary: stripTags(body),
   }))
 
-  if (!items.length) throw new Error('주간 항목을 찾지 못했습니다.')
-
   return { slug, issue, url, title, period, editorial: toParagraphs(editorialHtml), items }
+}
+
+/**
+ * 주간 호를 가져온다.
+ *
+ * 주요 뉴스는 최신 호에서 그대로 쓴다.
+ * 다만 머리글(에디터 글)은 매주 주제가 달라서, 어떤 주는 AI와 무관하다.
+ * 그래서 최근 호들을 훑어 AI·데이터 이야기인 호를 머리글로 고른다.
+ * (호수를 박아 두면 다음 주에 낡는다)
+ */
+const fetchWeekly = async () => {
+  const index = await get(WEEKLY_INDEX)
+  const slugs = [...new Set([...index.matchAll(/\/weekly\/(\d{6})/g)].map((m) => m[1]))]
+    .sort()
+    .reverse()
+  if (!slugs.length) throw new Error('주간 호수를 찾지 못했습니다.')
+
+  const latest = await parseIssue(slugs[0])
+  if (!latest.items.length) throw new Error('주간 항목을 찾지 못했습니다.')
+
+  let headline = latest
+  const isAiIssue = (issue) => issue.editorial.some((p) => AI_EDITORIAL.test(p.text))
+
+  if (!isAiIssue(latest)) {
+    // 최근 다섯 호까지만 거슬러 올라간다
+    for (const slug of slugs.slice(1, 6)) {
+      const past = await parseIssue(slug)
+      if (past.editorial.length && isAiIssue(past)) {
+        headline = past
+        break
+      }
+    }
+  }
+
+  return {
+    slug: latest.slug,
+    issue: latest.issue,
+    url: latest.url,
+    period: latest.period,
+    items: latest.items,
+    headline: {
+      slug: headline.slug,
+      issue: headline.issue,
+      url: headline.url,
+      title: headline.title,
+      editorial: headline.editorial,
+    },
+  }
 }
 
 /* ---------------------------------------------------------------- 실행 */
@@ -191,7 +233,8 @@ const main = async () => {
   console.log(`  일간 ${payload.daily.length}건`)
   console.log(
     payload.weekly
-      ? `  주간 ${payload.weekly.slug} · ${payload.weekly.items.length}건 · 에디터 글 ${payload.weekly.editorial.length}문단`
+      ? `  주간 ${payload.weekly.issue} · ${payload.weekly.items.length}건` +
+        ` / 머리글 ${payload.weekly.headline.issue} · ${payload.weekly.headline.editorial.length}문단`
       : '  주간 없음',
   )
   console.log(`  -> ${OUT}`)

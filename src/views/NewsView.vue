@@ -98,16 +98,23 @@ const lede = computed(() =>
       <template v-if="weekly">
         <!-- 대표 글: 이번 호 제목 + 에디터 글 -->
         <section class="lead">
-          <h2 class="lead-title">{{ weekly.title }}</h2>
+          <a
+            :href="weekly.headline.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="lead-title"
+          >
+            {{ weekly.headline.title }}
+          </a>
 
           <div class="editorial">
-            <p v-for="(p, i) in weekly.editorial" :key="i">{{ p.text }}</p>
+            <p v-for="(p, i) in weekly.headline.editorial" :key="i">{{ p.text }}</p>
           </div>
 
           <!-- 에디터 글에서 언급된 글로 바로 갈 수 있게 -->
-          <div v-if="weekly.editorial.some((p) => p.links.length)" class="mentioned">
+          <div v-if="weekly.headline.editorial.some((p) => p.links.length)" class="mentioned">
             <span class="mentioned-label">본문에 언급된 글</span>
-            <template v-for="p in weekly.editorial" :key="p.text">
+            <template v-for="p in weekly.headline.editorial" :key="p.text">
               <a
                 v-for="l in p.links"
                 :key="l.url"
@@ -140,11 +147,17 @@ const lede = computed(() =>
         </section>
 
         <footer class="colophon">
-          출처 ·
-          <a :href="weekly.url" target="_blank" rel="noopener noreferrer">
-            GeekNews Weekly {{ weekly.issue }}
+          출처 · 머리글은
+          <a :href="weekly.headline.url" target="_blank" rel="noopener noreferrer">
+            GeekNews Weekly {{ weekly.headline.issue }}
           </a>
-          제목과 요약문은 GeekNews가 작성한 것입니다. 제목을 누르면 원문으로 이동합니다.
+          <template v-if="weekly.headline.issue !== weekly.issue">
+            (AI·데이터를 다룬 가장 최근 호를 골랐습니다)</template
+          >, 주요 뉴스는
+          <a :href="weekly.url" target="_blank" rel="noopener noreferrer">
+            {{ weekly.issue }}
+          </a>
+          입니다. 제목과 요약문은 GeekNews가 작성한 것이며, 누르면 원문으로 이동합니다.
         </footer>
       </template>
 
@@ -265,13 +278,20 @@ const lede = computed(() =>
 }
 
 .lead-title {
+  display: block;
   max-width: 22ch;
   margin: 0 auto;
+  color: var(--text);
+  text-decoration: none;
   font-size: 1.7rem;
   font-weight: 800;
   line-height: 1.35;
   letter-spacing: -0.03em;
   text-align: center;
+}
+
+.lead-title:hover {
+  text-decoration: underline;
 }
 
 .editorial {
