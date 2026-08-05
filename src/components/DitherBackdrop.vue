@@ -84,24 +84,16 @@ const SHAPES = {
     ctx.fillText('}', c * 1.015, r * 0.5)
   },
 
-  // 소개(메인) - 구체.
-  // 밝기가 부드럽게 변하는 면이라 디더링의 점 밀도가 가장 잘 드러난다.
+  // 소개(메인) - 셸 프롬프트.
+  // 가운데는 콘텐츠 카드가 덮으므로, 좌우 여백으로 밀어내야 보인다.
   about: (ctx, c, r) => {
-    const cx = c * 0.5
-    const cy = r * 0.46
-    const R = Math.min(c, r) * 0.34
-
-    // 빛은 왼쪽 위에서 든다. 중심을 그쪽으로 밀면 구가 둥글게 보인다.
-    const g = ctx.createRadialGradient(cx - R * 0.38, cy - R * 0.42, R * 0.04, cx, cy, R)
-    g.addColorStop(0, tone(1)) // 하이라이트
-    g.addColorStop(0.42, tone(0.74))
-    g.addColorStop(0.78, tone(0.33))
-    g.addColorStop(1, tone(0.1)) // 그림자 쪽 가장자리
-
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(cx, cy, R, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.fillStyle = tone(FG_TONE)
+    ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'left'
+    ctx.fillText('>', c * -0.015, r * 0.5)
+    ctx.textAlign = 'right'
+    ctx.fillText('_', c * 1.015, r * 0.5)
   },
 }
 
