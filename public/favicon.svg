@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    탭 아이콘 - 상단 네비의 >_ 로고와 같은 모양.
+
+    SVG로 두면 16px에서도 흐려지지 않고 파일도 1KB가 안 된다.
+    브라우저가 다크 모드면 색을 뒤집어 어느 탭 배경에서도 읽힌다.
+
+    좌표는 16px로 줄였을 때를 기준으로 잡았다.
+    선이 가늘거나 꺾쇠와 커서가 붙으면 그 크기에서 한 덩어리로 뭉갠다.
+  -->
+  <style>
+    .bg { fill: #000; }
+    .ink { fill: none; stroke: #fff; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+    .caret { fill: #fff; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #fff; }
+      .ink { stroke: #000; }
+      .caret { fill: #000; }
+    }
+  </style>
+
+  <rect class="bg" width="32" height="32" rx="6" />
+
+  <!-- > 꺾쇠 -->
+  <polyline class="ink" points="7.8,9.5 13.8,16 7.8,22.5" />
+
+  <!-- _ 커서 (꺾쇠 끝과 2px 이상 띄운다) -->
+  <rect class="caret" x="17.8" y="19.6" width="8" height="3.6" rx="1.8" />
+</svg>

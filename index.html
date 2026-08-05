@@ -2,7 +2,12 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
+    <!--
+      탭 아이콘. 최신 브라우저는 svg를, 지원하지 않으면 ico를 쓴다.
+      svg 를 뒤에 두어야 둘 다 읽는 브라우저가 svg 를 고른다.
+    -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>skala vue</title>
 
