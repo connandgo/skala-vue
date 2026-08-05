@@ -106,9 +106,12 @@ const resolveShape = (path) => {
   return null // 그 외에는 구름 사진
 }
 
-const DURATION = 3000 // 애니메이션 길이(ms)
+// 등장 연출. false로 두면 애니메이션 없이 그림만 바로 나온다.
+const ANIMATE = true
+const DURATION = 1400 // 애니메이션 길이(ms)
 const TICK = 110 // 세대 간격(ms). 60fps로 돌릴 이유가 없다
-const SEED_DENSITY = 0.32
+// 초기 노이즈 밀도. 높으면 화면 전체가 지글거려 눈이 피로하다.
+const SEED_DENSITY = 0.07
 
 // 8x8 Bayer 행렬 - 밝기를 점의 밀도로 바꾸는 임계값 표
 const BAYER8 = [
@@ -354,7 +357,9 @@ const render = () => {
   }
 }
 
-const easeInOutQuad = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
+// 초반에 빠르게 채워지고 끝에서 부드럽게 멎는다.
+// 가운데가 느린 곡선(easeInOut)을 쓰면 노이즈만 오래 보여 조잡해진다.
+const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3)
 
 const stop = () => {
   if (raf) cancelAnimationFrame(raf)
@@ -393,7 +398,7 @@ const start = () => {
   buildTarget()
 
   // 모션을 줄이도록 설정한 사용자에게는 애니메이션 없이 결과만 보여준다
-  if (reduceMotion) {
+  if (reduceMotion || !ANIMATE) {
     settle()
     return
   }
@@ -414,7 +419,7 @@ const start = () => {
     if (now - lastTick >= TICK) {
       lastTick = now
       step()
-      applyLock(easeInOutQuad(elapsed / DURATION))
+      applyLock(easeOutCubic(elapsed / DURATION))
       render()
     }
     raf = requestAnimationFrame(loop)
@@ -440,6 +445,9 @@ onMounted(() => {
 
   window.addEventListener('resize', onResize)
   document.addEventListener('visibilitychange', onVisibility)
+
+  // 라우트가 바뀌면 그림을 새로 만들고 애니메이션을 다시 돌린다
+  watch(() => route.path, start)
 })
 
 onUnmounted(() => {
