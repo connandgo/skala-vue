@@ -7,6 +7,7 @@ import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
 import { RouterLink, RouterView } from 'vue-router'
 import AuthMenu from '@/components/AuthMenu.vue'
+import { useAuthStore } from '@/stores/authStore'
 
 // 최초 진입 인트로 (세션당 1회)
 const showIntro = ref(true)
@@ -16,10 +17,23 @@ const showIntro = ref(true)
 const isDark = ref(document.documentElement.classList.contains('theme-dark'))
 
 // 값이 바뀔 때마다 html 태그의 클래스와 localStorage를 갱신
+const auth = useAuthStore()
+
 watch(isDark, (dark) => {
   document.documentElement.classList.toggle('theme-dark', dark)
   localStorage.setItem('theme', dark ? 'dark' : 'light')
+  // 로그인해 있으면 계정에도 남긴다
+  auth.savePref('theme', dark ? 'dark' : 'light')
 })
+
+// 로그인하면 그 계정에 저장해 둔 테마를 되살린다
+watch(
+  () => auth.userId,
+  (id) => {
+    if (id && auth.prefs.theme) isDark.value = auth.prefs.theme === 'dark'
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

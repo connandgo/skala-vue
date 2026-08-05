@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
 import { toDisplayTemp } from '@/utils/temperature.js'
 import { tempColor, readableInk } from '@/utils/tempScale.js'
+import { useAuthStore } from '@/stores/authStore'
 
 /**
  * 전체 지역을 한 표로 본다.
@@ -19,6 +20,7 @@ const props = defineProps({
 defineEmits(['select', 'detail'])
 
 const configStore = useConfigStore()
+const auth = useAuthStore()
 const conv = (c) => toDisplayTemp(c, configStore.unit)
 
 const isDark = ref(document.documentElement.classList.contains('theme-dark'))
@@ -48,12 +50,19 @@ const toggleSort = (key) => {
 const sorted = computed(() => {
   const key = sortKey.value
   // 원본 배열을 건드리면 부모의 목록 순서까지 바뀐다. 반드시 복사본을 정렬한다.
-  return [...props.items].sort((a, b) => {
+  const list = [...props.items].sort((a, b) => {
     const va = a[key]
     const vb = b[key]
     const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb
     return sortAsc.value ? cmp : -cmp
   })
+
+  // 즐겨찾는 지역은 정렬과 상관없이 위로 끌어올린다
+  if (!auth.isLoggedIn) return list
+  return [
+    ...list.filter((c) => auth.isFavorite(c.id)),
+    ...list.filter((c) => !auth.isFavorite(c.id)),
+  ]
 })
 </script>
 
@@ -62,6 +71,8 @@ const sorted = computed(() => {
     <table>
       <thead>
         <tr>
+          <!-- 본문의 ☆ 칸과 순서를 맞춘다 -->
+          <th v-if="auth.isLoggedIn" class="star-col"></th>
           <th
             v-for="col in COLUMNS"
             :key="col.key"
@@ -86,6 +97,18 @@ const sorted = computed(() => {
           :class="{ on: item.id === selectedId }"
           @click="$emit('select', item)"
         >
+          <td v-if="auth.isLoggedIn" class="star-col">
+            <button
+              class="star"
+              type="button"
+              :class="{ on: auth.isFavorite(item.id) }"
+              :aria-label="`${item.name} 즐겨찾기`"
+              :aria-pressed="auth.isFavorite(item.id)"
+              @click.stop="auth.toggleFavorite(item.id)"
+            >
+              {{ auth.isFavorite(item.id) ? '★' : '☆' }}
+            </button>
+          </td>
           <td class="left name">
             <!-- 기온 색은 지도 마커와 같은 스케일을 쓴다 -->
             <span
@@ -226,6 +249,27 @@ th.right button {
 
 .link:hover {
   border-color: var(--hover-border);
+  color: var(--text);
+}
+
+.star-col {
+  width: 2.2em;
+  padding-right: 0;
+  text-align: center;
+}
+
+.star {
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.star:hover,
+.star.on {
   color: var(--text);
 }
 

@@ -1,5 +1,6 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
+import { useAuthStore } from './authStore'
 
 export const useConfigStore = defineStore('config', () => {
   // 1. state: 단위를 저장하는 변수 (초기값은 'celsius')
@@ -20,6 +21,18 @@ export const useConfigStore = defineStore('config', () => {
   function setUnit(next) {
     if (next === 'celsius' || next === 'fahrenheit') unit.value = next
   }
+
+  // 로그인해 있으면 단위를 계정에 남긴다.
+  // 로그인 순간에는 계정에 저장된 값을 화면에 되살린다.
+  const auth = useAuthStore()
+  watch(unit, (v) => auth.savePref('unit', v))
+  watch(
+    () => auth.userId,
+    (id) => {
+      if (id && auth.prefs.unit) unit.value = auth.prefs.unit
+    },
+    { immediate: true },
+  )
 
   return {
     unit,

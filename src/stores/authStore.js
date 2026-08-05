@@ -9,10 +9,20 @@ import { defineStore } from 'pinia'
  *
  * 비밀번호는 그대로 두지 않고 SHA-256으로 바꿔서 넣는다.
  * 어차피 로컬이지만, 저장소를 열었을 때 평문이 보이는 건 나쁜 습관이다.
+ *
+ * 계정에는 즐겨찾는 지역과 화면 설정도 함께 담는다.
+ * 로그인해도 아무것도 달라지지 않으면 계정이 있을 이유가 없다.
  */
 
 const ACCOUNTS_KEY = 'skala-accounts'
 const SESSION_KEY = 'skala-session'
+
+/** 계정마다 딸려 오는 설정의 초기값 */
+const emptyPrefs = () => ({
+  favorites: [], // 즐겨찾는 지역 id
+  unit: 'celsius',
+  theme: '', // '' 이면 기기 설정을 따른다
+})
 
 /** 문자열 -> SHA-256 16진수 */
 const sha256 = async (text) => {
@@ -31,13 +41,26 @@ const sha256 = async (text) => {
     .join('')
 }
 
-/** localStorage에서 계정 목록을 읽는다 (없거나 깨졌으면 빈 객체) */
+/**
+ * 저장된 계정을 읽는다.
+ * 예전에는 아이디마다 해시 문자열만 넣었다. 그 형태도 읽을 수 있게 맞춰 준다.
+ */
 const readAccounts = () => {
+  let raw
   try {
-    return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) ?? '{}')
+    raw = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) ?? '{}')
   } catch {
     return {}
   }
+
+  const out = {}
+  for (const [id, value] of Object.entries(raw)) {
+    out[id] =
+      typeof value === 'string'
+        ? { hash: value, prefs: emptyPrefs() } // 옛 형태
+        : { hash: value.hash, prefs: { ...emptyPrefs(), ...(value.prefs ?? {}) } }
+  }
+  return out
 }
 
 const writeAccounts = (accounts) => {
@@ -48,41 +71,119 @@ const writeAccounts = (accounts) => {
   }
 }
 
+/** 비밀번호 강도 (0~4). 화면에 막대로 보여 준다. */
+export const passwordScore = (pw) => {
+  if (!pw) return 0
+  let score = 0
+  if (pw.length >= 8) score++
+  if (pw.length >= 12) score++
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
+  if (/\d/.test(pw)) score++
+  if (/[^a-zA-Z0-9]/.test(pw)) score++
+  return Math.min(4, score)
+}
+
+export const SCORE_LABEL = ['너무 약함', '약함', '보통', '좋음', '아주 좋음']
+
 export const useAuthStore = defineStore('auth', () => {
-  // state: 로그인한 아이디. 로그아웃 상태면 빈 문자열.
+  // state
   const userId = ref(localStorage.getItem(SESSION_KEY) ?? '')
+  const prefs = ref(emptyPrefs())
+
+  // 새로고침해도 로그인 상태가 남아 있으니, 저장된 설정을 바로 불러온다
+  if (userId.value) {
+    const saved = readAccounts()[userId.value]
+    if (saved) prefs.value = saved.prefs
+    else userId.value = '' // 계정이 지워졌으면 세션도 버린다
+  }
 
   // getters
   const isLoggedIn = computed(() => userId.value !== '')
+  const favorites = computed(() => prefs.value.favorites)
 
-  // actions
-  /** 회원가입. 성공하면 그대로 로그인 상태가 된다. */
+  /* ---------------------------------------------------------------- 계정 */
+
   const signUp = async (id, password) => {
     const accounts = readAccounts()
     if (accounts[id]) throw new Error('이미 있는 아이디입니다.')
 
-    accounts[id] = await sha256(password)
+    accounts[id] = { hash: await sha256(password), prefs: emptyPrefs() }
     writeAccounts(accounts)
 
     userId.value = id
+    prefs.value = accounts[id].prefs
     localStorage.setItem(SESSION_KEY, id)
   }
 
   const logIn = async (id, password) => {
     const accounts = readAccounts()
-    if (!accounts[id]) throw new Error('없는 아이디입니다.')
-    if (accounts[id] !== (await sha256(password))) {
+    const account = accounts[id]
+    if (!account) throw new Error('없는 아이디입니다.')
+    if (account.hash !== (await sha256(password))) {
       throw new Error('비밀번호가 맞지 않습니다.')
     }
 
     userId.value = id
+    prefs.value = account.prefs
     localStorage.setItem(SESSION_KEY, id)
   }
 
   const logOut = () => {
     userId.value = ''
+    prefs.value = emptyPrefs()
     localStorage.removeItem(SESSION_KEY)
   }
 
-  return { userId, isLoggedIn, signUp, logIn, logOut }
+  /** 계정을 지운다. 되돌릴 수 없다. */
+  const removeAccount = () => {
+    if (!userId.value) return
+    const accounts = readAccounts()
+    delete accounts[userId.value]
+    writeAccounts(accounts)
+    logOut()
+  }
+
+  /* ---------------------------------------------------------------- 설정 */
+
+  /** 지금 로그인한 계정에 설정을 써 넣는다 */
+  const persist = () => {
+    if (!userId.value) return
+    const accounts = readAccounts()
+    if (!accounts[userId.value]) return
+    accounts[userId.value].prefs = { ...prefs.value }
+    writeAccounts(accounts)
+  }
+
+  const savePref = (key, value) => {
+    if (!userId.value) return
+    prefs.value = { ...prefs.value, [key]: value }
+    persist()
+  }
+
+  const isFavorite = (cityId) => prefs.value.favorites.includes(cityId)
+
+  /** 즐겨찾기를 켜고 끈다 */
+  const toggleFavorite = (cityId) => {
+    if (!userId.value) return
+    const list = prefs.value.favorites
+    prefs.value = {
+      ...prefs.value,
+      favorites: list.includes(cityId) ? list.filter((v) => v !== cityId) : [...list, cityId],
+    }
+    persist()
+  }
+
+  return {
+    userId,
+    prefs,
+    isLoggedIn,
+    favorites,
+    signUp,
+    logIn,
+    logOut,
+    removeAccount,
+    savePref,
+    isFavorite,
+    toggleFavorite,
+  }
 })
