@@ -71,15 +71,15 @@ const SHAPES = {
     /* -------- 빛줄기 -------- */
     // 렌즈 끝에서 스크린 네 귀퉁이로 퍼진다
     const lensX = c * 0.2
-    const lensY = r * 0.62
+    const lensY = r * 0.79
     const beam = ctx.createLinearGradient(lensX, lensY, c * 0.47, lensY)
     beam.addColorStop(0, tone(0.55))
     beam.addColorStop(1, tone(0.88))
     ctx.fillStyle = beam
     ctx.beginPath()
     ctx.moveTo(lensX, lensY)
-    ctx.lineTo(c * 0.47, r * 0.24)
-    ctx.lineTo(c * 0.47, r * 0.82)
+    ctx.lineTo(c * 0.47, r * 0.48)
+    ctx.lineTo(c * 0.47, r * 0.74)
     ctx.closePath()
     ctx.fill()
 
@@ -134,7 +134,7 @@ const SHAPES = {
     }
 
     const bx = c * 0.055 // 몸통 왼쪽
-    const by = r * 0.53 // 몸통 위
+    const by = r * 0.7 // 몸통 위
     const bw = c * 0.11
     const bh = r * 0.2
 
@@ -152,40 +152,68 @@ const SHAPES = {
   },
 
   // 디자인 이펙트 - 흐르는 물결과 기하 요소.
-  // 대각선으로 마주 보는 두 귀퉁이에 물결을 겹쳐 쌓고,
-  // 카드가 덮지 않는 가장자리에 작은 도형을 흩뿌린다.
+  //
+  // 원본 그림의 규칙
+  //   왼쪽 위와 아래쪽에 물결이 여러 겹 겹친다.
+  //   바깥으로 멀리 뻗은 겹일수록 옅고, 가장자리에 붙은 겹일수록 진하다.
+  //   그래서 큰 것부터 그리고 작고 진한 것을 위에 덮는다.
   effects: (ctx, c, r) => {
-    /** 점 목록을 부드러운 곡선으로 이어 채운다 */
-    const wave = (points, v) => {
+    /** 곡선 위쪽(또는 아래쪽)을 채운다 */
+    const fillCurve = (pts, v, closeTo) => {
       ctx.fillStyle = tone(v)
       ctx.beginPath()
-      ctx.moveTo(points[0][0] * c, points[0][1] * r)
-      for (let i = 1; i < points.length - 2; i += 2) {
-        ctx.quadraticCurveTo(
-          points[i][0] * c, points[i][1] * r,
-          points[i + 1][0] * c, points[i + 1][1] * r,
-        )
+      ctx.moveTo(pts[0][0] * c, pts[0][1] * r)
+      for (let i = 1; i + 1 < pts.length; i += 2) {
+        ctx.quadraticCurveTo(pts[i][0] * c, pts[i][1] * r, pts[i + 1][0] * c, pts[i + 1][1] * r)
       }
+      // 화면 밖 모서리로 닫아 면을 만든다
+      closeTo.forEach(([x, y]) => ctx.lineTo(x * c, y * r))
       ctx.closePath()
       ctx.fill()
     }
 
-    // 왼쪽 위 - 안쪽으로 갈수록 밝게 (세 겹)
-    wave([[0, 0], [0.42, 0.02], [0.30, 0.22], [0.20, 0.44], [0, 0.62]], 0.5)
-    wave([[0, 0], [0.30, 0.01], [0.21, 0.17], [0.13, 0.33], [0, 0.46]], 0.74)
-    wave([[0, 0], [0.18, 0.01], [0.12, 0.11], [0.07, 0.21], [0, 0.30]], 0.95)
+    /* ---------------- 왼쪽 위 물결 ---------------- */
+    // 위 모서리와 왼쪽 모서리로 닫는다
+    fillCurve(
+      [[0, 0.58], [0.16, 0.5], [0.3, 0.3], [0.46, 0.12], [0.62, 0.02]],
+      0.86,
+      [[0.62, 0], [0, 0]],
+    )
+    fillCurve(
+      [[0, 0.44], [0.1, 0.4], [0.2, 0.24], [0.32, 0.1], [0.44, 0.02]],
+      0.7,
+      [[0.44, 0], [0, 0]],
+    )
+    fillCurve(
+      [[0, 0.28], [0.06, 0.24], [0.12, 0.14], [0.2, 0.06], [0.28, 0]],
+      0.5,
+      [[0, 0]],
+    )
 
-    // 오른쪽 아래 - 위아래를 뒤집은 짝
-    wave([[1, 1], [0.58, 0.98], [0.70, 0.78], [0.80, 0.56], [1, 0.38]], 0.5)
-    wave([[1, 1], [0.70, 0.99], [0.79, 0.83], [0.87, 0.67], [1, 0.54]], 0.74)
-    wave([[1, 1], [0.82, 0.99], [0.88, 0.89], [0.93, 0.79], [1, 0.70]], 0.95)
+    /* ---------------- 아래 물결 ---------------- */
+    // 아래 모서리로 닫는다. 화면 폭 전체를 가로지른다.
+    fillCurve(
+      [[0, 0.88], [0.2, 0.82], [0.42, 0.86], [0.7, 0.9], [1, 0.6]],
+      0.86,
+      [[1, 1], [0, 1]],
+    )
+    fillCurve(
+      [[0, 0.98], [0.24, 0.92], [0.46, 0.95], [0.74, 0.98], [1, 0.72]],
+      0.7,
+      [[1, 1], [0, 1]],
+    )
+    fillCurve(
+      [[0.3, 1], [0.5, 0.98], [0.68, 1], [0.86, 1.02], [1, 0.86]],
+      0.5,
+      [[1, 1]],
+    )
 
     /* ---------------- 기하 요소 ---------------- */
     const ink = tone(FG_TONE)
-    const thin = Math.max(1, r * 0.004)
-    const u = r * 0.01 // 크기 기준
+    const thin = Math.max(1, r * 0.005)
+    const u = r * 0.01
 
-    /** 빗금 친 원 */
+    /** 빗금 친 원 (테두리 없이 안쪽만) */
     const hatched = (x, y, R) => {
       ctx.save()
       ctx.beginPath()
@@ -193,10 +221,10 @@ const SHAPES = {
       ctx.clip()
       ctx.strokeStyle = ink
       ctx.lineWidth = thin
-      for (let d = -R * 2; d < R * 2; d += R * 0.22) {
+      for (let d = -R * 2; d < R * 2; d += R * 0.24) {
         ctx.beginPath()
-        ctx.moveTo(x + d, y - R)
-        ctx.lineTo(x + d + R * 2, y + R)
+        ctx.moveTo(x + d, y + R)
+        ctx.lineTo(x + d + R * 2, y - R)
         ctx.stroke()
       }
       ctx.restore()
@@ -206,7 +234,7 @@ const SHAPES = {
     const dotted = (x, y, R) => {
       ctx.strokeStyle = ink
       ctx.lineWidth = thin
-      ctx.setLineDash([thin * 2, thin * 3])
+      ctx.setLineDash([thin * 1.6, thin * 3])
       ctx.beginPath()
       ctx.arc(x, y, R, 0, Math.PI * 2)
       ctx.stroke()
@@ -216,15 +244,12 @@ const SHAPES = {
     /** 점 격자 */
     const dots = (x, y, n = 5) => {
       ctx.fillStyle = ink
-      const gap = u * 1.6
+      const gap = u * 1.5
       for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
-          ctx.fillRect(x + i * gap, y + j * gap, thin * 1.6, thin * 1.6)
-        }
+        for (let j = 0; j < n; j++) ctx.fillRect(x + i * gap, y + j * gap, thin * 1.4, thin * 1.4)
       }
     }
 
-    /** 십자 */
     const plus = (x, y, size) => {
       ctx.fillStyle = ink
       ctx.fillRect(x - size, y - thin / 2, size * 2, thin)
@@ -235,7 +260,7 @@ const SHAPES = {
     const slashes = (x, y, len) => {
       ctx.strokeStyle = ink
       ctx.lineWidth = thin
-      for (const off of [0, u * 1.8]) {
+      for (const off of [0, u * 2]) {
         ctx.beginPath()
         ctx.moveTo(x + off, y + len)
         ctx.lineTo(x + off + len, y)
@@ -243,7 +268,6 @@ const SHAPES = {
       }
     }
 
-    /** 꽉 찬 원 */
     const disc = (x, y, R) => {
       ctx.fillStyle = ink
       ctx.beginPath()
@@ -251,16 +275,21 @@ const SHAPES = {
       ctx.fill()
     }
 
-    // 카드가 덮지 않는 가장자리에만 놓는다
-    hatched(c * 0.9, r * 0.12, u * 5)
-    dotted(c * 0.09, r * 0.72, u * 5.5)
-    dots(c * 0.93, r * 0.3)
-    dots(c * 0.04, r * 0.14)
-    plus(c * 0.28, r * 0.07, u * 1.6)
-    plus(c * 0.75, r * 0.94, u * 1.6)
-    slashes(c * 0.62, r * 0.04, u * 4)
-    disc(c * 0.12, r * 0.9, u * 1.5)
-    disc(c * 0.88, r * 0.55, u * 1.1)
+    // 원본 그림의 배치를 따르되, 카드가 덮는 가운데는 피한다
+    hatched(c * 0.82, r * 0.1, u * 4.5) // 오른쪽 위 빗금 원
+    dotted(c * 0.9, r * 0.3, u * 5) // 그 아래 점선 원
+    disc(c * 0.9, r * 0.3, u * 3.4) // 점선 원 안의 채운 원
+    dots(c * 0.95, r * 0.16) // 오른쪽 위 점 격자
+    dots(c * 0.03, r * 0.72) // 왼쪽 아래 점 격자
+    hatched(c * 0.13, r * 0.56, u * 5) // 왼쪽 빗금 원
+    dotted(c * 0.13, r * 0.56, u * 5)
+    disc(c * 0.55, r * 0.09, u * 1.6)
+    disc(c * 0.7, r * 0.5, u * 1.1)
+    plus(c * 0.24, r * 0.14, u * 1.5)
+    plus(c * 0.78, r * 0.66, u * 1.5)
+    plus(c * 0.86, r * 0.78, u * 1.2)
+    slashes(c * 0.58, r * 0.03, u * 4.5) // 위쪽 사선
+    slashes(c * 0.22, r * 0.88, u * 4.5) // 아래쪽 사선
   },
 
   // 뉴스 - 경위선이 그어진 지구본.
