@@ -6,7 +6,8 @@ import CityPanel from '@/components/weather/CityPanel.vue'
 import CityTable from '@/components/weather/CityTable.vue'
 import UnitToggler from '@/components/UnitToggler.vue'
 import { fetchAllCitiesWeather, fetchCityForecast } from '@/api/weather.js'
-import { fxMode, modeFromWeatherId } from '@/utils/weatherFx.js'
+import { fxMode, modeFromWeatherCode } from '@/utils/weatherFx.js'
+import { isWet } from '@/utils/wmo.js'
 
 /**
  * 지역별 날씨 대시보드.
@@ -57,8 +58,8 @@ const summary = computed(() => {
     avg: (temps.reduce((s, t) => s + t, 0) / temps.length).toFixed(1),
     hottest,
     coldest,
-    // 비/눈이 오는 지역 수 (id 5xx=비, 6xx=눈)
-    wet: list.filter((c) => c.weatherId >= 500 && c.weatherId < 700).length,
+    // 비나 눈이 오는 지역 수
+    wet: list.filter((c) => isWet(c.weatherCode)).length,
   }
 })
 
@@ -86,13 +87,13 @@ const loadWeather = async () => {
 const fxPreview = ref('')
 const setPreview = (mode) => {
   fxPreview.value = mode
-  fxMode.value = mode || modeFromWeatherId(selectedCity.value?.weatherId)
+  fxMode.value = mode || modeFromWeatherCode(selectedCity.value?.weatherCode)
 }
 
 const selectCity = (item) => {
   selectedId.value = item.id
   // 선택한 지역이 비/눈이면 화면 전체에 그 효과를 켠다
-  if (!fxPreview.value) fxMode.value = modeFromWeatherId(item.weatherId)
+  if (!fxPreview.value) fxMode.value = modeFromWeatherCode(item.weatherCode)
 }
 
 const goDetail = (item) => router.push(`/weather/${item.id}`)

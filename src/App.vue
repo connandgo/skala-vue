@@ -42,6 +42,7 @@ watch(isDark, (dark) => {
       <ul class="nav-links">
         <li><RouterLink to="/">소개</RouterLink></li>
         <li><RouterLink to="/weather">날씨 대시보드</RouterLink></li>
+        <li><RouterLink to="/news">AI 뉴스</RouterLink></li>
         <li><RouterLink to="/movies">영화 순위</RouterLink></li>
         <li><RouterLink to="/effects">디자인 이펙트</RouterLink></li>
       </ul>

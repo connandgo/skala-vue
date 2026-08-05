@@ -5,7 +5,7 @@ import CityPanel from '@/components/weather/CityPanel.vue'
 import UnitToggler from '@/components/UnitToggler.vue'
 import { CITIES, getMockWeather } from '@/data/cities.js'
 import { fetchCityWeather, fetchCityForecast } from '@/api/weather.js'
-import { fxMode, modeFromWeatherId } from '@/utils/weatherFx.js'
+import { fxMode, modeFromWeatherCode } from '@/utils/weatherFx.js'
 
 // 요구사항 4) 동적 경로(/weather/:cityId)로 들어온 도시 ID를 읽는다
 const route = useRoute()
@@ -32,7 +32,7 @@ onMounted(async () => {
     const [current, fc] = await Promise.all([fetchCityWeather(target), fetchCityForecast(target)])
     city.value = current
     forecast.value = fc
-    fxMode.value = modeFromWeatherId(current.weatherId)
+    fxMode.value = modeFromWeatherCode(current.weatherCode)
   } catch (err) {
     // 통신이 실패하면 도시 코드에 해당하는 Mock Data로 대체해 화면을 채운다
     console.warn('[상세] API 실패 → Mock Data로 대체:', err.message)

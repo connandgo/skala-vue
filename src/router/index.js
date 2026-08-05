@@ -28,6 +28,12 @@ const routes = [
     component: () => import('@/views/WeatherDetailView.vue'),
   },
   {
+    // AI 뉴스 다이제스트 (일간 / 주간)
+    path: '/news',
+    name: 'News',
+    component: () => import('@/views/NewsView.vue'),
+  },
+  {
     // 프론트엔드 디자인 이펙트 카탈로그
     path: '/effects',
     name: 'Effects',

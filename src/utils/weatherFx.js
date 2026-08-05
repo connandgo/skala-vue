@@ -8,13 +8,7 @@ import { ref } from 'vue'
 export const fxMode = ref('none') // 'rain' | 'snow' | 'none'
 
 /**
- * OpenWeather의 날씨 코드(weather[0].id)를 효과로 변환한다.
- * 2xx 뇌우 / 3xx 이슬비 / 5xx 비 -> rain, 6xx 눈 -> snow, 그 외 -> none
+ * WMO 날씨 코드를 화면 효과로 변환한다.
+ * 판단 규칙은 utils/wmo.js 한 곳에만 둔다.
  */
-export const modeFromWeatherId = (id) => {
-  if (id == null) return 'none'
-  const group = Math.floor(id / 100)
-  if (group === 2 || group === 3 || group === 5) return 'rain'
-  if (group === 6) return 'snow'
-  return 'none'
-}
+export { wmoMode as modeFromWeatherCode } from './wmo.js'

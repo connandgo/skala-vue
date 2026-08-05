@@ -97,6 +97,23 @@ const SHAPES = {
     star(c - cx, r * 0.5)
   },
 
+  // AI 뉴스 - 좌우 여백에 신문 본문처럼 촘촘한 가로줄.
+  // 글자를 흉내 낸 줄이라 멀리서 보면 조판된 지면처럼 읽힌다.
+  news: (ctx, c, r) => {
+    const band = Math.min(c * 0.1, r * 0.2)
+    const line = Math.max(2, Math.round(r * 0.012)) // 줄 두께
+    const gap = line * 2.6 // 줄 간격
+
+    ctx.fillStyle = tone(FG_TONE)
+    for (let y = r * 0.06; y < r * 0.94; y += gap) {
+      // 마지막 줄은 문단 끝처럼 짧게 끊는다
+      const short = Math.random() < 0.16
+      const w = band * (short ? 0.45 + Math.random() * 0.2 : 1)
+      ctx.fillRect(0, y, w, line)
+      ctx.fillRect(c - w, y, w, line)
+    }
+  },
+
   // 소개(메인) - 셸 프롬프트.
   // 가운데는 콘텐츠 카드가 덮으므로, 좌우 여백으로 밀어내야 보인다.
   about: (ctx, c, r) => {
@@ -122,6 +139,7 @@ const tone = (v) => {
 const resolveShape = (path) => {
   if (path.startsWith('/movies')) return SHAPES.movies
   if (path.startsWith('/effects')) return SHAPES.effects
+  if (path.startsWith('/news')) return SHAPES.news
   if (path === '/') return SHAPES.about // 메인(소개)
   return null // 날씨 페이지는 구름 사진
 }
@@ -131,7 +149,7 @@ const ANIMATE = true
 const DURATION = 1100 // 애니메이션 길이(ms)
 // 세대 간격(ms). 짧을수록 점들이 빠르게 꿈틀거려 산만해진다.
 // 다만 너무 크면 프레임 수가 모자라 뚝뚝 끊긴다. (길이 ÷ 이 값 = 프레임 수)
-const TICK = 110
+const TICK = 220
 // 초기 노이즈 밀도.
 // 배경 점 밀도와 비슷하게 채워야 처음엔 '균일한 결'로만 보이고 형태가 드러나지 않는다.
 // 라이프 규칙이 몇 세대 만에 이 노이즈를 알아서 솎아낸다.
