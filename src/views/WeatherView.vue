@@ -8,6 +8,7 @@ import UnitToggler from '@/components/UnitToggler.vue'
 import { fetchAllCitiesWeather, fetchCityForecast } from '@/api/weather.js'
 import { fxMode, modeFromWeatherCode } from '@/utils/weatherFx.js'
 import { isWet } from '@/utils/wmo.js'
+import { useAuthStore } from '@/stores/authStore'
 
 /**
  * 지역별 날씨 대시보드.
@@ -20,12 +21,14 @@ import { isWet } from '@/utils/wmo.js'
  */
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const weatherList = ref([])
 // onMounted에서 바로 조회하므로 처음부터 로딩 상태로 시작한다
 const isLoading = ref(true)
 const errorMessage = ref('')
 const failedCities = ref([])
+const isMock = ref(false) // 실시간 조회가 막혀 임시 데이터를 쓰는 중인지
 const updatedAt = ref('')
 
 const searchQuery = ref('')
@@ -58,26 +61,31 @@ const summary = computed(() => {
     avg: (temps.reduce((s, t) => s + t, 0) / temps.length).toFixed(1),
     hottest,
     coldest,
+    // 전국에서 가장 더운 곳과 추운 곳의 차이
+    spread: Math.round(hottest.temp - coldest.temp),
     // 비나 눈이 오는 지역 수
     wet: list.filter((c) => isWet(c.weatherCode)).length,
   }
 })
 
-/** OpenWeather에서 전체 도시의 현재 날씨를 받아온다 */
+/** 전체 도시의 현재 날씨를 받아온다 */
 const loadWeather = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const { list, failed } = await fetchAllCitiesWeather()
+    const { list, failed, isMock: mock, reason } = await fetchAllCitiesWeather()
     weatherList.value = list
     failedCities.value = failed
+    isMock.value = mock
+    errorMessage.value = mock ? reason : ''
     updatedAt.value = new Date().toLocaleTimeString('ko-KR')
 
-    // 선택이 없으면 첫 번째 지역을 자동 선택해 오른쪽이 비어 보이지 않게 한다
-    if (!selectedId.value && list.length) selectCity(list[0])
+    // 로그인해 뒀다면 즐겨찾는 지역을 먼저 연다
+    const favorite = list.find((c) => auth.isFavorite(c.id))
+    if (!selectedId.value && list.length) selectCity(favorite ?? list[0])
   } catch (err) {
     console.error('[weather] 조회 실패:', err)
-    errorMessage.value = 'API 호출에 실패했습니다. .env의 키와 네트워크를 확인하세요.'
+    errorMessage.value = err.message
   } finally {
     isLoading.value = false
   }
@@ -127,7 +135,8 @@ onMounted(loadWeather)
         <p v-if="summary" class="page-desc">
           전국 평균 <b>{{ summary.avg }}°C</b> · 가장 더운 곳
           <b>{{ summary.hottest.name }} {{ summary.hottest.temp }}°</b> · 가장 추운 곳
-          <b>{{ summary.coldest.name }} {{ summary.coldest.temp }}°</b>
+          <b>{{ summary.coldest.name }} {{ summary.coldest.temp }}°</b> · 지역 차
+          <b>{{ summary.spread }}°</b>
           <template v-if="summary.wet"> · 비·눈 {{ summary.wet }}곳</template>
         </p>
         <p v-else class="page-desc">지도에서 지역을 선택하면 상세 정보를 볼 수 있습니다.</p>
@@ -141,7 +150,11 @@ onMounted(loadWeather)
       </div>
     </header>
 
-    <p v-if="errorMessage" class="state-msg error">{{ errorMessage }}</p>
+    <p v-if="isMock" class="state-msg notice">
+      실시간 조회에 실패해 <b>임시 데이터</b>를 표시하고 있습니다. 값은 예시입니다.
+      <span v-if="errorMessage" class="reason">({{ errorMessage }})</span>
+    </p>
+    <p v-else-if="errorMessage" class="state-msg error">{{ errorMessage }}</p>
 
     <!-- 좌: 고르는 곳 / 우: 보는 곳 -->
     <div class="split">
@@ -386,6 +399,20 @@ details[open] > summary {
 .state-msg.small {
   padding: 10px 0 0;
   font-size: 0.72rem;
+}
+
+.state-msg.notice {
+  margin-bottom: 20px;
+  padding: 12px;
+  border-left: 2px solid var(--text);
+  background: var(--bg-subtle);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+}
+
+.state-msg.notice .reason {
+  color: var(--text-muted);
 }
 
 .state-msg.error {
