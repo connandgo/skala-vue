@@ -1,5 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import LifeDemo from '@/components/LifeDemo.vue'
 
 /**
  * 소개.
@@ -13,28 +14,28 @@ const PAGES = [
   {
     to: '/news',
     label: 'AI 뉴스',
-    lede: '매일 무슨 일이 있었는지, 한 주에 무엇이 남았는지',
+    lede: '국내 AI 기사 일간 정리와 GeekNews 주간 요약',
     body: '국내 언론사 AI 기사를 갈래별로 모은 일간과, GeekNews Weekly를 그 구성 그대로 옮긴 주간을 함께 봅니다. 두 곳 다 CORS가 막혀 있어 GitHub Actions가 6시간마다 미리 받아 둡니다.',
     tags: ['구글 뉴스 RSS', 'GeekNews', 'Actions 수집'],
   },
   {
     to: '/effects',
     label: '디자인 이펙트',
-    lede: '이름을 알아야 검색할 수 있고, 검색할 수 있어야 말이 통한다',
+    lede: '프론트엔드 시각 효과 24가지와 그 코드',
     body: '프론트엔드에서 자주 쓰는 시각 효과 24가지를 다섯 갈래로 묶었습니다. 데모는 전부 실제로 동작하고, 코드는 눌러서 그대로 복사할 수 있습니다.',
     tags: ['효과 24가지', '동작하는 데모', '코드 복사'],
   },
   {
     to: '/movies',
     label: '영화 순위',
-    lede: '어제 가장 많이 본 영화와, 지금 예매할 수 있는 곳',
+    lede: '어제 가장 많이 본 영화와 예매 링크',
     body: '영화진흥위원회 박스오피스를 일별·주간으로 보여 줍니다. 포스터는 TMDB에서 가져오고, 각 영화마다 예매 사이트로 바로 갈 수 있습니다.',
     tags: ['KOFIC', 'TMDB 포스터', '예매 링크'],
   },
   {
     to: '/weather',
     label: '날씨 대시보드',
-    lede: '전국을 한눈에 놓고, 한 곳을 깊이',
+    lede: '전국 10개 지역의 현재 날씨와 예보',
     body: '10개 지역을 지도에 올리고 기온을 색으로 나타냅니다. 지역을 고르면 24시간 기온 그래프, 주간 예보, 대기질까지 이어집니다. 비나 눈이 오는 지역을 고르면 화면에도 내립니다.',
     tags: ['Open-Meteo', 'Leaflet 지도', '즐겨찾기'],
   },
@@ -45,31 +46,42 @@ const PAGES = [
   <div class="about">
     <header class="page-banner">
       <span class="eyebrow">about</span>
-      <h1 class="page-title">네 가지를 한자리에</h1>
-      <p class="page-desc">뉴스, 디자인 효과, 영화 순위, 날씨를 각각의 방식으로 정리한 곳입니다.</p>
+      <h1 class="page-title">Vue 3 실습 프로젝트</h1>
+      <p class="page-desc">뉴스, 디자인 이펙트, 영화 순위, 날씨 — 네 개의 페이지로 만들었습니다.</p>
     </header>
 
-    <!-- 만든 결 -->
+    <!-- 디자인 소개 -->
     <section class="concept">
-      <div class="concept-item">
-        <h2>배경은 라이프 게임으로 그립니다</h2>
-        <p>
-          화면 뒤의 그림은 이미지가 아니라 매번 새로 계산합니다. 무작위 점에서 시작해 콘웨이의 라이프
-          게임 규칙으로 꿈틀거리다가, 목표 그림의 픽셀이 하나씩 잠기며 1.1초 만에 자리를 잡습니다.
-          완성되면 계산을 멈춰 그 뒤로는 아무 자원도 쓰지 않습니다.
-        </p>
-        <p class="concept-sub">
-          밝기를 점의 밀도로 바꾸는 8×8 Bayer 디더링을 씁니다. 인쇄물의 하프톤과 같은 원리입니다.
-        </p>
-      </div>
+      <h2 class="concept-title">디자인 소개</h2>
 
-      <div class="concept-item">
-        <h2>처음 들어오면 화면이 한 번 무너집니다</h2>
-        <p>
-          커널 패닉 덤프가 한 줄씩 찍히다가, 그 글자들이 무너져 SKALA로 다시 모입니다. 세션당 한 번만
-          재생되고, 모션을 줄이도록 설정한 분에게는 아예 나오지 않습니다.
-        </p>
-        <p class="concept-sub">오른쪽 아래 SKIP으로 건너뛸 수 있습니다.</p>
+      <div class="concept-grid">
+        <div class="concept-item">
+          <h3>배경 — 라이프 게임</h3>
+
+          <!-- 글로만 설명하면 와닿지 않아, 규칙이 도는 것을 그대로 보여 준다 -->
+          <LifeDemo />
+
+          <p>
+            위에서 도는 것이 콘웨이의 라이프 게임입니다. 칸마다 이웃이 2~3이면 살아남고, 정확히
+            3이면 새로 태어납니다. 이 규칙만으로 점들이 저절로 꿈틀거립니다.
+          </p>
+          <p>
+            화면 뒤의 배경도 같은 규칙으로 그립니다. 다만 거기서는 목표 그림의 픽셀이 하나씩 잠기며
+            1.1초 만에 자리를 잡고, 완성되면 계산을 멈춰 그 뒤로는 자원을 쓰지 않습니다.
+          </p>
+          <p class="concept-sub">
+            밝기를 점의 밀도로 바꾸는 8×8 Bayer 디더링을 씁니다. 인쇄물의 하프톤과 같은 원리입니다.
+          </p>
+        </div>
+
+        <div class="concept-item">
+          <h3>인트로 — 커널 패닉</h3>
+          <p>
+            처음 들어오면 커널 패닉 덤프가 한 줄씩 찍히다가, 그 글자들이 무너져 SKALA로 다시
+            모입니다. 세션당 한 번만 재생되고, 모션을 줄이도록 설정한 분에게는 아예 나오지 않습니다.
+          </p>
+          <p class="concept-sub">오른쪽 아래 SKIP으로 건너뛸 수 있습니다.</p>
+        </div>
       </div>
     </section>
 
@@ -202,16 +214,30 @@ const PAGES = [
   color: var(--text-muted);
 }
 
-/* ---------------- 컨셉 ---------------- */
+/* ---------------- 디자인 소개 ---------------- */
 .concept {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
   padding-bottom: 40px;
   border-bottom: 1px solid var(--border);
 }
 
-.concept-item h2 {
+.concept-title {
+  margin: 0 0 20px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.concept-grid {
+  display: grid;
+  /* 라이프 데모가 들어간 쪽이 길어지므로 위를 맞춘다 */
+  align-items: start;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.concept-item h3 {
   margin: 0 0 10px;
   font-size: 1rem;
   font-weight: 700;
@@ -222,6 +248,10 @@ const PAGES = [
   font-size: 0.85rem;
   line-height: 1.8;
   color: var(--text-muted);
+}
+
+.concept-item p + p {
+  margin-top: 10px;
 }
 
 .concept-sub {
@@ -368,7 +398,7 @@ const PAGES = [
 }
 
 @media (max-width: 760px) {
-  .concept {
+  .concept-grid {
     grid-template-columns: 1fr;
   }
   .card,

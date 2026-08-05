@@ -98,7 +98,10 @@ onUnmounted(() => {
     <header class="page-banner">
       <span class="eyebrow">design effect</span>
       <h1 class="page-title">디자인 이펙트 카탈로그</h1>
-      <p class="page-desc">디자인 이펙트와 코드를 확인해 보세요.</p>
+      <p class="page-desc">
+        프론트엔드에서 자주 쓰는 시각 효과 24가지입니다. 데모는 전부 실제로 동작하고, 코드는 눌러서
+        복사할 수 있습니다.
+      </p>
     </header>
 
     <!-- 섹션 바로가기 -->
