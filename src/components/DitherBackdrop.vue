@@ -52,49 +52,215 @@ const BG_TONE = 0.3
 const FG_TONE = 0.95
 
 const SHAPES = {
-  // 영화 - 필름 스트립이 화면을 가로로 관통
+  // 영화 - 영사기가 스크린을 비춘다.
+  // 위쪽에 필름 띠가 비스듬히 지나가고, 왼쪽 아래 영사기에서
+  // 빛이 퍼져 오른쪽 스크린에 닿는다.
   movies: (ctx, c, r) => {
-    const top = r * 0.28
-    const hgt = r * 0.44
-    const bar = hgt * 0.18
+    const ink = tone(FG_TONE)
 
-    ctx.fillStyle = tone(FG_TONE)
-    ctx.fillRect(0, top, c, bar)
-    ctx.fillRect(0, top + hgt - bar, c, bar)
+    /* -------- 스크린 (가장 밝은 면) -------- */
+    ctx.fillStyle = tone(1)
+    ctx.beginPath()
+    ctx.moveTo(c * 0.47, r * 0.24)
+    ctx.lineTo(c * 1.02, r * 0.16)
+    ctx.lineTo(c * 1.02, r * 0.9)
+    ctx.lineTo(c * 0.47, r * 0.82)
+    ctx.closePath()
+    ctx.fill()
 
-    // 스프로킷 구멍 (띠를 뚫는다)
-    ctx.fillStyle = tone(BG_TONE)
-    const hw = c * 0.02
-    const hh = bar * 0.5
-    for (let x = c * 0.025; x < c; x += c * 0.07) {
-      ctx.fillRect(x, top + bar * 0.25, hw, hh)
-      ctx.fillRect(x, top + hgt - bar + bar * 0.25, hw, hh)
+    /* -------- 빛줄기 -------- */
+    // 렌즈 끝에서 스크린 네 귀퉁이로 퍼진다
+    const lensX = c * 0.2
+    const lensY = r * 0.62
+    const beam = ctx.createLinearGradient(lensX, lensY, c * 0.47, lensY)
+    beam.addColorStop(0, tone(0.55))
+    beam.addColorStop(1, tone(0.88))
+    ctx.fillStyle = beam
+    ctx.beginPath()
+    ctx.moveTo(lensX, lensY)
+    ctx.lineTo(c * 0.47, r * 0.24)
+    ctx.lineTo(c * 0.47, r * 0.82)
+    ctx.closePath()
+    ctx.fill()
+
+    /* -------- 필름 띠 (비스듬히) -------- */
+    ctx.save()
+    ctx.translate(0, r * 0.1)
+    ctx.rotate(-0.11) // 오른쪽으로 갈수록 살짝 올라간다
+    const bandH = r * 0.26
+    const rail = bandH * 0.2
+
+    ctx.fillStyle = tone(0.55)
+    ctx.fillRect(-c * 0.1, 0, c * 1.3, bandH)
+
+    // 위아래 레일의 스프로킷 구멍
+    ctx.fillStyle = tone(BG_TONE - 0.08)
+    const hw = c * 0.022
+    const hh = rail * 0.62
+    for (let x = -c * 0.08; x < c * 1.25; x += c * 0.048) {
+      ctx.fillRect(x, rail * 0.2, hw, hh)
+      ctx.fillRect(x, bandH - rail * 0.82, hw, hh)
     }
+
+    // 가운데 화면 칸
+    ctx.fillStyle = tone(0.4)
+    for (let x = -c * 0.08; x < c * 1.25; x += c * 0.145) {
+      ctx.fillRect(x, rail * 1.35, c * 0.125, bandH - rail * 2.7)
+    }
+    ctx.restore()
+
+    /* -------- 영사기 -------- */
+    const R = r * 0.1 // 릴 반지름
+
+    /** 살이 들어간 릴 */
+    const reel = (x, y) => {
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(x, y, R, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 살 사이를 파낸다
+      ctx.fillStyle = tone(BG_TONE)
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + 0.3
+        ctx.beginPath()
+        ctx.arc(x + Math.cos(a) * R * 0.55, y + Math.sin(a) * R * 0.55, R * 0.26, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(x, y, R * 0.16, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    const bx = c * 0.055 // 몸통 왼쪽
+    const by = r * 0.53 // 몸통 위
+    const bw = c * 0.11
+    const bh = r * 0.2
+
+    reel(bx + bw * 0.22, by - R * 0.75)
+    reel(bx + bw * 0.78, by - R * 0.95)
+
+    ctx.fillStyle = ink
+    ctx.fillRect(bx, by, bw, bh) // 몸통
+    ctx.fillRect(bx + bw, by + bh * 0.18, c * 0.045, bh * 0.42) // 렌즈
+    ctx.fillRect(bx - c * 0.012, by + bh * 0.3, c * 0.018, bh * 0.34) // 뒤쪽 손잡이
+
+    // 다리
+    ctx.fillRect(bx + bw * 0.42, by + bh, c * 0.012, r * 0.07)
+    ctx.fillRect(bx + bw * 0.12, by + bh + r * 0.06, bw * 0.7, r * 0.014)
   },
 
-  // 디자인 이펙트 - 좌우 끝의 큰 별표.
-  // 폰트에 없는 글자일 수 있어 직접 그린다. 중심에서 뻗은 6개 획.
+  // 디자인 이펙트 - 흐르는 물결과 기하 요소.
+  // 대각선으로 마주 보는 두 귀퉁이에 물결을 겹쳐 쌓고,
+  // 카드가 덮지 않는 가장자리에 작은 도형을 흩뿌린다.
   effects: (ctx, c, r) => {
-    // 별이 통째로 보이려면 카드 옆 여백 안에 들어와야 한다.
-    // 화면 높이로만 크기를 잡으면 여백보다 커져서 잘린다.
-    const R = Math.min(r * 0.16, c * 0.085)
-    const thick = R * 0.2
+    /** 점 목록을 부드러운 곡선으로 이어 채운다 */
+    const wave = (points, v) => {
+      ctx.fillStyle = tone(v)
+      ctx.beginPath()
+      ctx.moveTo(points[0][0] * c, points[0][1] * r)
+      for (let i = 1; i < points.length - 2; i += 2) {
+        ctx.quadraticCurveTo(
+          points[i][0] * c, points[i][1] * r,
+          points[i + 1][0] * c, points[i + 1][1] * r,
+        )
+      }
+      ctx.closePath()
+      ctx.fill()
+    }
 
-    const star = (cx, cy) => {
+    // 왼쪽 위 - 안쪽으로 갈수록 밝게 (세 겹)
+    wave([[0, 0], [0.42, 0.02], [0.30, 0.22], [0.20, 0.44], [0, 0.62]], 0.5)
+    wave([[0, 0], [0.30, 0.01], [0.21, 0.17], [0.13, 0.33], [0, 0.46]], 0.74)
+    wave([[0, 0], [0.18, 0.01], [0.12, 0.11], [0.07, 0.21], [0, 0.30]], 0.95)
+
+    // 오른쪽 아래 - 위아래를 뒤집은 짝
+    wave([[1, 1], [0.58, 0.98], [0.70, 0.78], [0.80, 0.56], [1, 0.38]], 0.5)
+    wave([[1, 1], [0.70, 0.99], [0.79, 0.83], [0.87, 0.67], [1, 0.54]], 0.74)
+    wave([[1, 1], [0.82, 0.99], [0.88, 0.89], [0.93, 0.79], [1, 0.70]], 0.95)
+
+    /* ---------------- 기하 요소 ---------------- */
+    const ink = tone(FG_TONE)
+    const thin = Math.max(1, r * 0.004)
+    const u = r * 0.01 // 크기 기준
+
+    /** 빗금 친 원 */
+    const hatched = (x, y, R) => {
       ctx.save()
-      ctx.translate(cx, cy)
-      ctx.fillStyle = tone(FG_TONE)
-      for (let i = 0; i < 3; i++) {
-        ctx.rotate(Math.PI / 3) // 60도씩 돌려 6방향을 만든다
-        ctx.fillRect(-thick / 2, -R, thick, R * 2)
+      ctx.beginPath()
+      ctx.arc(x, y, R, 0, Math.PI * 2)
+      ctx.clip()
+      ctx.strokeStyle = ink
+      ctx.lineWidth = thin
+      for (let d = -R * 2; d < R * 2; d += R * 0.22) {
+        ctx.beginPath()
+        ctx.moveTo(x + d, y - R)
+        ctx.lineTo(x + d + R * 2, y + R)
+        ctx.stroke()
       }
       ctx.restore()
     }
 
-    // 반지름의 1.4배 안쪽에 두면 여유를 두고 다 들어온다
-    const cx = R * 1.4
-    star(cx, r * 0.5)
-    star(c - cx, r * 0.5)
+    /** 점선 테두리 원 */
+    const dotted = (x, y, R) => {
+      ctx.strokeStyle = ink
+      ctx.lineWidth = thin
+      ctx.setLineDash([thin * 2, thin * 3])
+      ctx.beginPath()
+      ctx.arc(x, y, R, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.setLineDash([])
+    }
+
+    /** 점 격자 */
+    const dots = (x, y, n = 5) => {
+      ctx.fillStyle = ink
+      const gap = u * 1.6
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          ctx.fillRect(x + i * gap, y + j * gap, thin * 1.6, thin * 1.6)
+        }
+      }
+    }
+
+    /** 십자 */
+    const plus = (x, y, size) => {
+      ctx.fillStyle = ink
+      ctx.fillRect(x - size, y - thin / 2, size * 2, thin)
+      ctx.fillRect(x - thin / 2, y - size, thin, size * 2)
+    }
+
+    /** 나란한 사선 두 줄 */
+    const slashes = (x, y, len) => {
+      ctx.strokeStyle = ink
+      ctx.lineWidth = thin
+      for (const off of [0, u * 1.8]) {
+        ctx.beginPath()
+        ctx.moveTo(x + off, y + len)
+        ctx.lineTo(x + off + len, y)
+        ctx.stroke()
+      }
+    }
+
+    /** 꽉 찬 원 */
+    const disc = (x, y, R) => {
+      ctx.fillStyle = ink
+      ctx.beginPath()
+      ctx.arc(x, y, R, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    // 카드가 덮지 않는 가장자리에만 놓는다
+    hatched(c * 0.9, r * 0.12, u * 5)
+    dotted(c * 0.09, r * 0.72, u * 5.5)
+    dots(c * 0.93, r * 0.3)
+    dots(c * 0.04, r * 0.14)
+    plus(c * 0.28, r * 0.07, u * 1.6)
+    plus(c * 0.75, r * 0.94, u * 1.6)
+    slashes(c * 0.62, r * 0.04, u * 4)
+    disc(c * 0.12, r * 0.9, u * 1.5)
+    disc(c * 0.88, r * 0.55, u * 1.1)
   },
 
   // 뉴스 - 경위선이 그어진 지구본.
