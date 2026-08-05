@@ -22,6 +22,10 @@ const LIGHT = '#ffffff'
 const GAIN = 1.15 // 사진 대비
 const SHARPEN = 2.2 // 구름 윤곽 강조 세기 (0이면 원본 그대로)
 const SHARPEN_RADIUS = 2
+// 어두운 하늘이 완전 검정으로 뭉치지 않도록 명암 범위를 좁힌다.
+// FLOOR가 0이면 가장 어두운 곳에 밝은 픽셀이 하나도 안 남아 새까맣게 보인다.
+const FLOOR = 0.22
+const CEIL = 0.94
 const SRC = `${import.meta.env.BASE_URL}sky.jpg`
 
 const DURATION = 3000 // 애니메이션 길이(ms)
@@ -91,6 +95,9 @@ const buildTarget = () => {
     for (let x = 0; x < cols; x++) {
       const idx = y * cols + x
       let v = (sharpened[idx] - 0.5) * GAIN + 0.5
+      v = v < 0 ? 0 : v > 1 ? 1 : v
+      v = FLOOR + v * (CEIL - FLOOR) // 완전한 검정/흰색을 없애 결을 남긴다
+
       // 밝기가 이 칸의 임계값을 넘으면 밝은 픽셀
       target[idx] = v > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
     }
