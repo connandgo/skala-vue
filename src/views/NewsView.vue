@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { fetchNews, timeAgo, RANGES, ALL_TOPICS } from '@/api/news.js'
+import { fetchNews, timeAgo, RANGES, ALL_TOPICS, DAILY_ORDER } from '@/api/news.js'
 
 /**
  * 뉴스
@@ -33,10 +33,10 @@ onMounted(async () => {
 
 /** 일간은 갈래별로 묶는다. 비어 있는 갈래는 내보내지 않는다. */
 const dailyGroups = computed(() =>
-  ALL_TOPICS.map((t) => ({
-    ...t,
-    items: daily.value.filter((i) => i.topic === t.id),
-  })).filter((g) => g.items.length),
+  DAILY_ORDER.map((id) => {
+    const topic = ALL_TOPICS.find((t) => t.id === id)
+    return { ...topic, items: daily.value.filter((i) => i.topic === id) }
+  }).filter((g) => g.items.length),
 )
 
 const today = computed(() =>
@@ -147,17 +147,14 @@ const lede = computed(() =>
         </section>
 
         <footer class="colophon">
-          출처 · 머리글은
+          출처 ·
           <a :href="weekly.headline.url" target="_blank" rel="noopener noreferrer">
             GeekNews Weekly {{ weekly.headline.issue }}
           </a>
           <template v-if="weekly.headline.issue !== weekly.issue">
-            (AI·데이터를 다룬 가장 최근 호를 골랐습니다)</template
-          >, 주요 뉴스는
-          <a :href="weekly.url" target="_blank" rel="noopener noreferrer">
-            {{ weekly.issue }}
-          </a>
-          입니다. 제목과 요약문은 GeekNews가 작성한 것이며, 누르면 원문으로 이동합니다.
+            ·
+            <a :href="weekly.url" target="_blank" rel="noopener noreferrer">{{ weekly.issue }}</a>
+          </template>
         </footer>
       </template>
 
@@ -187,8 +184,6 @@ const lede = computed(() =>
         <footer class="colophon">
           출처 ·
           <a href="https://news.google.com" target="_blank" rel="noopener noreferrer">구글 뉴스</a>
-          RSS. AI · 인공지능 · 생성형 AI · OpenAI · AI 반도체 다섯 갈래로 검색해 합친 뒤 최신순으로
-          정렬합니다.
         </footer>
       </template>
 

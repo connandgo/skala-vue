@@ -52,6 +52,15 @@ const OTHER = { id: 'other', label: '그 밖에' }
 
 export const ALL_TOPICS = [...TOPICS, OTHER]
 
+/**
+ * 화면에 내보내는 순서.
+ *
+ * TOPICS 순서는 '분류 우선순위'라서 바꾸면 기사가 다른 갈래로 넘어간다.
+ * (기술 규칙이 넓어서 맨 위에 두면 대부분이 기술로 빨려 들어간다)
+ * 그래서 보여 주는 순서만 따로 둔다.
+ */
+export const DAILY_ORDER = ['tech', 'product', 'money', 'policy', 'risk', 'other']
+
 const classify = (title) => (TOPICS.find((t) => t.re.test(title)) ?? OTHER).id
 
 /** "3시간 전" */
