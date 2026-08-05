@@ -85,6 +85,15 @@ export const passwordScore = (pw) => {
 
 export const SCORE_LABEL = ['너무 약함', '약함', '보통', '좋음', '아주 좋음']
 
+/** 아이디 규칙: 영문 소문자·숫자·밑줄 2~16자 */
+export const ID_RULE = /^[a-z0-9_]{2,16}$/
+
+/**
+ * 이미 쓰는 아이디인지 본다.
+ * 서버가 아니라 이 브라우저의 저장소를 뒤지는 것이라, 다른 기기의 가입은 모른다.
+ */
+export const isTakenId = (id) => Boolean(readAccounts()[id])
+
 export const useAuthStore = defineStore('auth', () => {
   // state
   const userId = ref(localStorage.getItem(SESSION_KEY) ?? '')
@@ -178,6 +187,7 @@ export const useAuthStore = defineStore('auth', () => {
     prefs,
     isLoggedIn,
     favorites,
+    isTakenId,
     signUp,
     logIn,
     logOut,
