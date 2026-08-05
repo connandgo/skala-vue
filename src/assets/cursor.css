@@ -1,0 +1,68 @@
+/* ==========================================================================
+   커서
+
+   SVG를 data URI로 넣어 이미지 파일 없이 쓴다.
+   마지막 두 숫자는 '누르는 지점'이다. 이걸 안 맞추면 클릭이 빗나간다.
+
+   색은 라이트/다크 양쪽에서 보이도록 흰 테두리를 두른 검정으로 그린다.
+   반대로 다크 모드에서는 검정 테두리를 두른 흰색으로 바꾼다.
+   ========================================================================== */
+
+:root {
+  /* 기본 - 십자선. 가운데가 비어 있어 아래 글자를 가리지 않는다. */
+  --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke='%23fff' stroke-width='3'%3E%3Cpath d='M12 3v6M12 15v6M3 12h6M15 12h6'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000' stroke-width='1.4'%3E%3Cpath d='M12 3v6M12 15v6M3 12h6M15 12h6'/%3E%3C/g%3E%3C/svg%3E")
+    12 12;
+
+  /* 누를 수 있는 것 - 속을 채운 사각형 */
+  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Crect x='6' y='6' width='14' height='14' fill='%23fff' stroke='%23000' stroke-width='1.4'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='3'%3E%3Cpath d='M13 1v3M13 22v3M1 13h3M22 13h3'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000' stroke-width='1.4'%3E%3Cpath d='M13 1v3M13 22v3M1 13h3M22 13h3'/%3E%3C/g%3E%3C/svg%3E")
+    13 13;
+
+  /* 글자를 고를 수 있는 곳 - 모노스페이스 캐럿 */
+  --cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='26'%3E%3Cg fill='none' stroke='%23fff' stroke-width='3.4'%3E%3Cpath d='M8 3v20M4 3h8M4 23h8'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000' stroke-width='1.6'%3E%3Cpath d='M8 3v20M4 3h8M4 23h8'/%3E%3C/g%3E%3C/svg%3E")
+    8 13;
+}
+
+/* 다크 모드에서는 안팎을 뒤집는다 */
+.theme-dark {
+  --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke='%23000' stroke-width='3'%3E%3Cpath d='M12 3v6M12 15v6M3 12h6M15 12h6'/%3E%3C/g%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.4'%3E%3Cpath d='M12 3v6M12 15v6M3 12h6M15 12h6'/%3E%3C/g%3E%3C/svg%3E")
+    12 12;
+
+  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Crect x='6' y='6' width='14' height='14' fill='%23000' stroke='%23fff' stroke-width='1.4'/%3E%3Cg fill='none' stroke='%23000' stroke-width='3'%3E%3Cpath d='M13 1v3M13 22v3M1 13h3M22 13h3'/%3E%3C/g%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.4'%3E%3Cpath d='M13 1v3M13 22v3M1 13h3M22 13h3'/%3E%3C/g%3E%3C/svg%3E")
+    13 13;
+
+  --cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='26'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4'%3E%3Cpath d='M8 3v20M4 3h8M4 23h8'/%3E%3C/g%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.6'%3E%3Cpath d='M8 3v20M4 3h8M4 23h8'/%3E%3C/g%3E%3C/svg%3E")
+    8 13;
+}
+
+/* 손가락으로 쓰는 기기에는 커서가 없다. 그럴 땐 손대지 않는다. */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    cursor: var(--cursor-default), default;
+  }
+
+  a,
+  button,
+  summary,
+  label,
+  select,
+  [role='button'],
+  .leaflet-container .weather-pin,
+  tbody tr {
+    cursor: var(--cursor-pointer), pointer;
+  }
+
+  input[type='text'],
+  input[type='search'],
+  input[type='password'],
+  input[type='number'],
+  textarea {
+    cursor: var(--cursor-text), text;
+  }
+
+  /* 비활성 요소는 기본 커서 그대로 두어 눌러도 소용없음을 알린다 */
+  button:disabled,
+  input:disabled {
+    cursor: var(--cursor-default), not-allowed;
+  }
+}
