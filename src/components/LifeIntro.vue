@@ -8,8 +8,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
  *   2) 이어서 SKALA가 블록 문자 배너로 출력된다
  *   3) 잠시 머문 뒤 사라진다
  *
- * 배너는 하드코딩하지 않는다. 작은 캔버스에 SKALA를 그린 뒤
- * 픽셀이 찍힌 칸을 블록(█)으로 바꿔 만든다.
+ * 배너 글자는 아래 GLYPHS에 직접 그려 두었다.
  */
 
 const emit = defineEmits(['done'])
@@ -28,9 +27,6 @@ const BG = '#0b0b0b'
 const DIM = 'rgba(255,255,255,0.32)'
 const CODE = 'rgba(255,255,255,0.72)'
 const BRIGHT = '#ffffff'
-
-const BANNER_COLS = 56 // 배너 가로 문자 수
-const BANNER_ROWS = 9
 
 // 배너 앞에 먼저 찍히는 줄들
 const TAIL = ['', '[    0.483102]  ---[ end Kernel panic ]---', '']
@@ -84,31 +80,30 @@ const makeLine = () => {
 
 /* ---------------------------------------------------------------- 배너 */
 
-/** SKALA를 블록 문자 배너로 만든다 */
-const makeBanner = () => {
-  const off = document.createElement('canvas')
-  off.width = BANNER_COLS
-  off.height = BANNER_ROWS
-  const octx = off.getContext('2d', { willReadFrequently: true })
-
-  octx.fillStyle = '#fff'
-  octx.textAlign = 'center'
-  octx.textBaseline = 'middle'
-  octx.font = `800 ${BANNER_ROWS * 1.2}px "IBM Plex Mono", monospace`
-  octx.fillText('SKALA', BANNER_COLS / 2, BANNER_ROWS / 2)
-
-  const data = octx.getImageData(0, 0, BANNER_COLS, BANNER_ROWS).data
-  const out = []
-  for (let y = 0; y < BANNER_ROWS; y++) {
-    let row = ''
-    for (let x = 0; x < BANNER_COLS; x++) {
-      row += data[(y * BANNER_COLS + x) * 4 + 3] > 110 ? '█' : ' '
-    }
-    // 오른쪽 빈칸은 그릴 필요가 없다
-    out.push(row.replace(/\s+$/, ''))
-  }
-  return out
+/**
+ * SKALA 배너.
+ * 캔버스 픽셀을 뽑아 쓰면 이 크기에선 글자가 뭉개져, 직접 그려 둔다.
+ * 글자 하나는 6칸 x 7줄.
+ */
+const GLYPHS = {
+  S: ['██████', '██    ', '██    ', '██████', '    ██', '    ██', '██████'],
+  K: ['██  ██', '██ ██ ', '████  ', '███   ', '████  ', '██ ██ ', '██  ██'],
+  A: [' ████ ', '██  ██', '██  ██', '██████', '██  ██', '██  ██', '██  ██'],
+  L: ['██    ', '██    ', '██    ', '██    ', '██    ', '██    ', '██████'],
 }
+
+const BANNER_ROWS = 7
+
+/** 글자를 가로로 이어 붙여 배너 줄을 만든다 */
+const makeBanner = () => {
+  const word = 'SKALA'.split('')
+  return Array.from({ length: BANNER_ROWS }, (_, y) =>
+    word.map((ch) => GLYPHS[ch][y]).join('  ').replace(/\s+$/, ''),
+  )
+}
+
+// 배너 가로 문자 수 (글자 6칸 + 사이 2칸)
+const BANNER_COLS = 5 * 6 + 4 * 2
 
 /* ---------------------------------------------------------------- 렌더 */
 

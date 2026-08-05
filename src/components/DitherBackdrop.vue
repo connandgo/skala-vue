@@ -79,9 +79,9 @@ const SHAPES = {
     ctx.textBaseline = 'middle'
     // 가운데 정렬로 밀면 글자가 잘려서, 각 변에 붙여 정렬한다
     ctx.textAlign = 'left'
-    ctx.fillText('{', c * 0.02, r * 0.5)
+    ctx.fillText('{', c * -0.015, r * 0.5)
     ctx.textAlign = 'right'
-    ctx.fillText('}', c * 0.98, r * 0.5)
+    ctx.fillText('}', c * 1.015, r * 0.5)
   },
 
   // 소개 - 로고 텍스트
