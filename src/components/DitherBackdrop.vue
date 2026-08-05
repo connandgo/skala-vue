@@ -34,7 +34,23 @@ const SHARPEN_RADIUS = 2
 // FLOOR가 0이면 가장 어두운 곳에 밝은 픽셀이 하나도 안 남아 새까맣게 보인다.
 const FLOOR = 0.22
 const CEIL = 0.94
-const SRC = `${import.meta.env.BASE_URL}sky.jpg`
+/**
+ * 라우트별 배경 사진.
+ * 여기 없는 경로는 아래 SHAPES의 도형을 쓴다.
+ *
+ * 파일은 public/ 에 두면 된다. 빌드하면 그대로 복사된다.
+ */
+const PHOTOS = {
+  '/weather': `${import.meta.env.BASE_URL}sky.jpg`,
+}
+
+/** 그 경로에서 쓸 사진 주소 (없으면 빈 문자열) */
+const photoFor = (path) => {
+  if (PHOTOS[path]) return PHOTOS[path]
+  // /weather/city_01 처럼 하위 경로도 같은 사진을 쓴다
+  const parent = Object.keys(PHOTOS).find((k) => k !== '/' && path.startsWith(k))
+  return parent ? PHOTOS[parent] : ''
+}
 
 // 원본 사진은 왼쪽이 빈 하늘이다.
 // 좌우를 뒤집은 사본을 살짝 어긋나게 겹쳐 왼쪽에도 구름을 만든다.
@@ -395,19 +411,179 @@ const SHAPES = {
     ctx.globalCompositeOperation = 'source-over'
   },
 
-  // 소개(메인) - 셸 프롬프트.
-  // 가운데는 콘텐츠 카드가 덮으므로, 좌우 여백으로 밀어내야 보인다.
+  // 소개(메인) - 언덕 위의 세 친구.
+  //
+  // 하늘 -> 먼 산 -> 언덕 -> 나무 -> 인물 순으로 뒤에서부터 덮어 그린다.
+  // 디더링을 거치면 색이 사라지므로, 앞뒤를 톤 차이로만 구분해야 한다.
   about: (ctx, c, r) => {
-    ctx.fillStyle = tone(FG_TONE)
-    ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
-    ctx.textBaseline = 'middle'
-    ctx.textAlign = 'left'
-    ctx.fillText('>', c * -0.015, r * 0.5)
+    /** 창 크기가 달라져도 같은 자리에 오도록 번호로 값을 만든다 */
+    const rand = (i, salt) => {
+      const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
+      return x - Math.floor(x)
+    }
 
-    // 커서. '_' 글자는 글자 박스 바닥에 붙어 힘없이 보여서 사각형으로 그린다.
-    const cw = r * 0.17
-    const ch = r * 0.34
-    ctx.fillRect(c - cw * 0.72, (r - ch) / 2, cw, ch)
+    const HORIZON = r * 0.42 // 하늘과 언덕이 만나는 높이
+
+    /* ---------------- 하늘 ---------------- */
+    const sky = ctx.createLinearGradient(0, 0, 0, HORIZON)
+    sky.addColorStop(0, tone(0.72))
+    sky.addColorStop(1, tone(0.95))
+    ctx.fillStyle = sky
+    ctx.fillRect(0, 0, c, HORIZON)
+
+    /** 동그라미 여러 개를 겹쳐 만든 뭉게구름 */
+    const cloud = (x, y, w, v) => {
+      ctx.fillStyle = tone(v)
+      const lobes = 5
+      for (let i = 0; i < lobes; i++) {
+        const t = i / (lobes - 1)
+        const cx = x + (t - 0.5) * w
+        // 가운데가 봉긋하게 솟는다
+        const cy = y - Math.sin(t * Math.PI) * w * 0.1
+        const rad = w * (0.16 + Math.sin(t * Math.PI) * 0.12)
+        ctx.beginPath()
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    cloud(c * 0.16, r * 0.13, c * 0.2, 1)
+    cloud(c * 0.44, r * 0.09, c * 0.16, 0.99)
+    cloud(c * 0.74, r * 0.15, c * 0.24, 1)
+    cloud(c * 0.94, r * 0.08, c * 0.14, 0.98)
+
+    /* ---------------- 먼 산 ---------------- */
+    ctx.fillStyle = tone(0.62)
+    ctx.beginPath()
+    ctx.moveTo(c * 0.34, HORIZON)
+    ctx.lineTo(c * 0.5, r * 0.24)
+    ctx.lineTo(c * 0.66, HORIZON)
+    ctx.closePath()
+    ctx.fill()
+
+    /* ---------------- 언덕 ---------------- */
+    // 왼쪽이 높고 오른쪽으로 완만하게 내려온다
+    const hillY = (t) => HORIZON - r * 0.06 + Math.pow(t, 1.6) * r * 0.16
+
+    ctx.fillStyle = tone(0.5)
+    ctx.beginPath()
+    ctx.moveTo(0, hillY(0))
+    for (let t = 0; t <= 1.001; t += 0.02) ctx.lineTo(t * c, hillY(t))
+    ctx.lineTo(c, r)
+    ctx.lineTo(0, r)
+    ctx.closePath()
+    ctx.fill()
+
+    // 아래로 갈수록 조금 진하게 (풀밭에 깊이가 생긴다)
+    const grass = ctx.createLinearGradient(0, HORIZON, 0, r)
+    grass.addColorStop(0, 'rgba(255,255,255,0)')
+    grass.addColorStop(1, 'rgba(0,0,0,0.22)')
+    ctx.fillStyle = grass
+    ctx.fillRect(0, HORIZON - r * 0.06, c, r)
+
+    /* ---------------- 들꽃 ---------------- */
+    ctx.fillStyle = tone(0.95)
+    for (let i = 0; i < 90; i++) {
+      const t = rand(i, 1)
+      const x = t * c
+      // 언덕 능선보다 아래에만 뿌린다
+      const y = hillY(t) + rand(i, 2) * (r - hillY(t)) * 0.95
+      const size = r * (0.004 + rand(i, 3) * 0.006)
+      ctx.beginPath()
+      ctx.arc(x, y, size, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    /* ---------------- 오른쪽 나무 ---------------- */
+    const tx = c * 0.87
+    const ty = r * 0.52
+
+    // 줄기
+    ctx.fillStyle = tone(0.28)
+    ctx.fillRect(tx - c * 0.012, ty, c * 0.024, r * 0.3)
+
+    // 잎: 큰 덩어리 몇 개를 겹친다
+    const leaves = [
+      [0, -0.02, 0.13],
+      [-0.07, 0.04, 0.1],
+      [0.08, 0.03, 0.1],
+      [0.02, 0.1, 0.09],
+    ]
+    ctx.fillStyle = tone(0.34)
+    for (const [dx, dy, rad] of leaves) {
+      ctx.beginPath()
+      ctx.arc(tx + dx * c, ty - r * 0.12 + dy * r, rad * r, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    /* ---------------- 세 친구 ---------------- */
+    /**
+     * 동글동글한 몸에 귀와 눈만 얹는다.
+     * 흰 몸 + 검은 윤곽이라 디더링해도 형태가 남는다.
+     */
+    const friend = (x, y, size, kind) => {
+      const outline = tone(0.12)
+
+      // 귀 (몸보다 먼저 그려 뒤로 보낸다)
+      ctx.fillStyle = tone(0.97)
+      ctx.strokeStyle = outline
+      ctx.lineWidth = Math.max(1.5, size * 0.05)
+
+      if (kind === 'rabbit') {
+        for (const side of [-1, 1]) {
+          ctx.beginPath()
+          ctx.ellipse(x + side * size * 0.42, y - size * 0.95, size * 0.16, size * 0.42, side * 0.2, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.stroke()
+        }
+      } else {
+        for (const side of [-1, 1]) {
+          ctx.beginPath()
+          ctx.arc(x + side * size * 0.62, y - size * 0.5, size * 0.24, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.stroke()
+        }
+      }
+
+      // 몸
+      ctx.beginPath()
+      ctx.arc(x, y, size, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+
+      // 눈 두 개
+      ctx.fillStyle = outline
+      for (const side of [-1, 1]) {
+        ctx.beginPath()
+        ctx.arc(x + side * size * 0.34, y - size * 0.08, size * 0.09, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // 입 (작은 곡선)
+      ctx.strokeStyle = outline
+      ctx.lineWidth = Math.max(1, size * 0.04)
+      ctx.beginPath()
+      ctx.arc(x, y + size * 0.12, size * 0.16, 0.2 * Math.PI, 0.8 * Math.PI)
+      ctx.stroke()
+
+      // 볼 (연한 톤이라 도트가 성기게 찍힌다)
+      ctx.fillStyle = tone(0.62)
+      for (const side of [-1, 1]) {
+        ctx.beginPath()
+        ctx.ellipse(x + side * size * 0.6, y + size * 0.12, size * 0.14, size * 0.09, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    const baseY = r * 0.7
+    const size = r * 0.11
+
+    // 가운데 셋은 콘텐츠 카드에 가려진다. 왼쪽 여백에 우사기를 크게 하나 더 둔다.
+    friend(c * 0.09, baseY - r * 0.02, size * 1.45, 'rabbit')
+
+    friend(c * 0.4, baseY, size, 'bear')
+    friend(c * 0.5, baseY + r * 0.01, size * 0.95, 'cat')
+    friend(c * 0.61, baseY + r * 0.02, size * 1.02, 'rabbit')
   },
 }
 
@@ -417,7 +593,15 @@ const tone = (v) => {
   return `rgb(${g},${g},${g})`
 }
 
+/**
+ * 그 경로에 그릴 도형.
+ *
+ * 사진이 지정된 경로는 보통 도형을 그리지 않지만,
+ * 파일이 없거나 못 불러왔을 때는 도형으로 되돌아간다. (빈 화면 방지)
+ */
 const resolveShape = (path) => {
+  if (photoFor(path) && image) return null
+
   if (path.startsWith('/movies')) return SHAPES.movies
   if (path.startsWith('/effects')) return SHAPES.effects
   if (path.startsWith('/news')) return SHAPES.news
@@ -727,7 +911,7 @@ const settle = () => {
 
 const start = () => {
   const canvas = canvasRef.value
-  if (!canvas || !image) return
+  if (!canvas) return
   stop()
 
   w = window.innerWidth
@@ -794,18 +978,51 @@ const onVisibility = () => {
   if (document.hidden) settle()
 }
 
+/** 지금 불러 둔 사진 주소. 같은 사진이면 다시 받지 않는다. */
+let loadedSrc = ''
+
+/**
+ * 그 경로에 필요한 사진을 준비하고 그리기를 시작한다.
+ * 도형만 쓰는 경로는 사진을 비우고 바로 그린다.
+ */
+const loadPhotoFor = (path) => {
+  const src = photoFor(path)
+
+  if (!src) {
+    image = null
+    loadedSrc = ''
+    start()
+    return
+  }
+
+  if (src === loadedSrc && image?.complete) {
+    start()
+    return
+  }
+
+  loadedSrc = src
+  const img = new Image()
+  img.onload = () => {
+    image = img
+    start()
+  }
+  img.onerror = () => {
+    // 파일이 없어도 화면이 깨지지 않게 바탕만 깔고 넘어간다
+    console.warn('[배경] 이미지를 불러오지 못했습니다:', src)
+    image = null
+    start()
+  }
+  img.src = src
+}
+
 onMounted(() => {
-  image = new Image()
-  image.onload = start
-  // 사진을 못 불러오면 배경 없이 둔다 (화면이 깨지지는 않는다)
-  image.onerror = () => console.warn('[배경] 구름 이미지를 불러오지 못했습니다:', SRC)
-  image.src = SRC
+  loadPhotoFor(route.path)
 
   window.addEventListener('resize', onResize)
   document.addEventListener('visibilitychange', onVisibility)
 
-  // 라우트가 바뀌면 그림을 새로 만들고 애니메이션을 다시 돌린다
-  watch(() => route.path, start)
+  // 라우트가 바뀌면 그 경로의 사진을 준비하고 다시 그린다
+  watch(() => route.path, loadPhotoFor)
 })
 
 onUnmounted(() => {
@@ -813,7 +1030,10 @@ onUnmounted(() => {
   clearTimeout(resizeTimer)
   window.removeEventListener('resize', onResize)
   document.removeEventListener('visibilitychange', onVisibility)
-  if (image) image.onload = null
+  if (image) {
+    image.onload = null
+    image.onerror = null
+  }
 })
 </script>
 
