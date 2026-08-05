@@ -115,6 +115,9 @@ const TICK = 220
 // 배경 점 밀도와 비슷하게 채워야 처음엔 '균일한 결'로만 보이고 형태가 드러나지 않는다.
 // 라이프 규칙이 몇 세대 만에 이 노이즈를 알아서 솎아낸다.
 const SEED_DENSITY = 0.42
+// 마무리 구간 시작 지점(0~1).
+// 이 지점부터 남은 잔해를 조금씩 지워, 정지 순간에 툭 끊기지 않게 한다.
+const CLEANUP_FROM = 0.55
 
 // 8x8 Bayer 행렬 - 밝기를 점의 밀도로 바꾸는 임계값 표
 const BAYER8 = [
@@ -146,6 +149,8 @@ let target = new Uint8Array(0)
 let edgeMap = new Uint8Array(0)
 // 지금까지 드러난 비율. 윤곽선도 이 값에 맞춰 서서히 나타난다.
 let revealed = 0
+// 한 번 스러진 잔해는 다시 살아나지 않도록 표시해 둔다
+let deadMask = new Uint8Array(0)
 
 let raf = null
 let resizeTimer = null
@@ -296,6 +301,11 @@ const step = () => {
         next[idx] = 1
         continue
       }
+      // 마무리 구간에서 스러진 칸은 다시 살아나지 않는다
+      if (deadMask[idx]) {
+        next[idx] = 0
+        continue
+      }
 
       let n = 0
       for (let dy = -1; dy <= 1; dy++) {
@@ -326,6 +336,19 @@ const applyLock = (progress) => {
     if (target[i] === 1 && lockOrder[i] < progress) {
       lockMap[i] = 1
       grid[i] = 1
+    }
+  }
+}
+
+/**
+ * 잠기지 않은 잔해를 progress만큼 스러지게 한다.
+ * 잠금과 같은 난수 순서를 쓰므로 그림이 채워지는 결과 자연스럽게 이어진다.
+ */
+const applyCleanup = (progress) => {
+  for (let i = 0; i < grid.length; i++) {
+    if (!lockMap[i] && lockOrder[i] < progress) {
+      deadMask[i] = 1
+      grid[i] = 0
     }
   }
 }
@@ -402,6 +425,7 @@ const start = () => {
   lockMap = new Uint8Array(cols * rows)
   lockOrder = new Float32Array(cols * rows)
   for (let i = 0; i < lockOrder.length; i++) lockOrder[i] = Math.random()
+  deadMask = new Uint8Array(cols * rows)
   revealed = 0
 
   buildTarget()
@@ -427,8 +451,13 @@ const start = () => {
     }
     if (now - lastTick >= TICK) {
       lastTick = now
+      const t = elapsed / DURATION
       step()
-      applyLock(easeInOutCubic(elapsed / DURATION))
+      applyLock(easeInOutCubic(t))
+      // 후반부터 잔해를 서서히 걷어낸다
+      if (t > CLEANUP_FROM) {
+        applyCleanup(easeInOutCubic((t - CLEANUP_FROM) / (1 - CLEANUP_FROM)))
+      }
       render()
     }
     raf = requestAnimationFrame(loop)
