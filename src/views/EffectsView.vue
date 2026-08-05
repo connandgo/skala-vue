@@ -96,11 +96,9 @@ onUnmounted(() => {
 <template>
   <div ref="rootRef" class="effects">
     <header class="page-banner">
-      <span class="eyebrow">reference</span>
+      <span class="eyebrow">design effect</span>
       <h1 class="page-title">디자인 이펙트 카탈로그</h1>
-      <p class="page-desc">
-        직접 확인해 보고 코드까지 가져가세요. 이름과 영문 검색어를 함께 적어 두었습니다.
-      </p>
+      <p class="page-desc">디자인 이펙트와 코드를 확인해 보세요.</p>
     </header>
 
     <!-- 섹션 바로가기 -->
@@ -140,6 +138,27 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
+/* App.vue의 scoped 스타일은 RouterView 자식까지 닿지 않는다.
+   날씨·뉴스 페이지와 같은 크기가 되도록 여기서 직접 정의한다. */
+.page-banner {
+  padding: 40px 0 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-title {
+  margin: 6px 0 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.page-desc {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 0.68rem;
@@ -149,10 +168,11 @@ onUnmounted(() => {
 
 /* ---------------- 섹션 바로가기 ---------------- */
 .jump {
-  display: flex;
+  /* inline-flex 라야 테두리가 마지막 항목에서 끝난다.
+     flex는 폭을 꽉 채워 오른쪽에 빈 칸이 길게 남는다. */
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 0;
-  margin-bottom: 8px;
+  margin: 12px 0 8px;
   border: 1px solid var(--border);
 }
 
