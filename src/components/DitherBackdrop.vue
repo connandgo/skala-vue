@@ -108,8 +108,9 @@ const resolveShape = (path) => {
 
 // 등장 연출. false로 두면 애니메이션 없이 그림만 바로 나온다.
 const ANIMATE = true
-const DURATION = 1400 // 애니메이션 길이(ms)
-const TICK = 110 // 세대 간격(ms). 60fps로 돌릴 이유가 없다
+const DURATION = 1800 // 애니메이션 길이(ms)
+// 세대 간격(ms). 짧을수록 점들이 빠르게 꿈틀거려 산만해진다.
+const TICK = 220
 // 초기 노이즈 밀도. 높으면 화면 전체가 지글거려 눈이 피로하다.
 const SEED_DENSITY = 0.07
 
