@@ -76,10 +76,12 @@ const SHAPES = {
   challenges: (ctx, c, r) => {
     ctx.fillStyle = tone(FG_TONE)
     ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
-    ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('{', c * 0.13, r * 0.5)
-    ctx.fillText('}', c * 0.87, r * 0.5)
+    // 가운데 정렬로 밀면 글자가 잘려서, 각 변에 붙여 정렬한다
+    ctx.textAlign = 'left'
+    ctx.fillText('{', c * 0.02, r * 0.5)
+    ctx.textAlign = 'right'
+    ctx.fillText('}', c * 0.98, r * 0.5)
   },
 
   // 소개 - 로고 텍스트

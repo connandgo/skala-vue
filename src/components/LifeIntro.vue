@@ -4,28 +4,36 @@ import { onMounted, onUnmounted, ref } from 'vue'
 /**
  * 최초 진입 인트로.
  *
- *   1) 터미널에 코드가 빠르게 올라간다
- *   2) 글자들이 흩어진 점으로 무너지면서 SKALA 형태로 모인다
+ *   1) 커널 패닉 덤프가 위에서부터 한 줄씩 찍힌다
+ *   2) 이어서 SKALA가 블록 문자 배너로 출력된다
  *   3) 잠시 머문 뒤 사라진다
  *
- * 모이는 방식은 배경(DitherBackdrop)과 같다.
- * 칸마다 난수 순서를 두고 그 순서대로 잠가, 한꺼번에 나타나지 않게 한다.
+ * 배너는 하드코딩하지 않는다. 작은 캔버스에 SKALA를 그린 뒤
+ * 픽셀이 찍힌 칸을 블록(█)으로 바꿔 만든다.
  */
 
 const emit = defineEmits(['done'])
 
-const PX = 5 // 도트 한 칸 크기
-const SCROLL = 1600 // 덤프가 한 줄씩 찍히는 시간(ms)
-const ASSEMBLE = 1500 // SKALA로 모이는 시간(ms)
-const HOLD = 600 // 완성 후 머무는 시간(ms)
+const FONT_SIZE = 16 // 덤프 글자 크기
+const LINE_H = 23 // 덤프 줄 간격
+const PAD_X = 36
+const PAD_Y = 28
+
+const DUMP = 1700 // 덤프가 다 찍히는 시간(ms)
+const TICK = 90 // 배너 한 줄 간격(ms)
+const HOLD = 1000 // 완성 후 머무는 시간(ms)
 const FADE = 600 // 사라지는 시간(ms)
-const TICK = 70 // 라이프 세대 간격(ms)
 
 const BG = '#0b0b0b'
-const CODE = 'rgba(255,255,255,0.62)'
-const CODE_DIM = 'rgba(255,255,255,0.24)'
-const LIGHT = '#ffffff'
-const DOT = 'rgba(255,255,255,0.5)'
+const DIM = 'rgba(255,255,255,0.32)'
+const CODE = 'rgba(255,255,255,0.72)'
+const BRIGHT = '#ffffff'
+
+const BANNER_COLS = 56 // 배너 가로 문자 수
+const BANNER_ROWS = 9
+
+// 배너 앞에 먼저 찍히는 줄들
+const TAIL = ['', '[    0.483102]  ---[ end Kernel panic ]---', '']
 
 const SEEN_KEY = 'skala-intro-seen'
 
@@ -34,42 +42,31 @@ const visible = ref(true)
 const fading = ref(false)
 
 let ctx = null
-let cols = 0
-let rows = 0
 let w = 0
 let h = 0
-
-let grid = new Uint8Array(0) // 흩어져 떠도는 점
-let lockMap = new Uint8Array(0) // SKALA 형태로 굳은 칸
-let lockOrder = new Float32Array(0)
-let target = new Uint8Array(0)
-
 let lines = []
+let banner = []
+let bannerFont = 20
 let raf = null
 let fadeTimer = null
 
-/* ---------------------------------------------------------------- 코드 */
+/* ---------------------------------------------------------------- 덤프 */
 
 const HEX = '0123456789abcdef'
-
 const rand = (n) => Math.floor(Math.random() * n)
 const hex = (n) => Array.from({ length: n }, () => HEX[rand(16)]).join('')
 
-// 커널 패닉 덤프에 나오는 줄들
 const TRACE = [
   '? __die_body+0x1a/0x60',
   '? page_fault_oops+0x15c/0x2b0',
   '? exc_page_fault+0x7f/0x180',
-  '? asm_exc_page_fault+0x27/0x30',
   '? skala_render+0x2f/0x120 [skala]',
   '? life_step+0x8c/0x1e0 [skala]',
   '? dither_bayer8+0x41/0x90 [skala]',
   'do_syscall_64+0x5c/0x90',
-  'entry_SYSCALL_64_after_hwframe+0x78/0xe2',
   'process_one_work+0x1f4/0x3b0',
 ]
-
-const REGS = ['RAX', 'RBX', 'RCX', 'RDX', 'RSI', 'RDI', 'RBP', 'R08', 'R12', 'R15']
+const REGS = ['RAX', 'RBX', 'RCX', 'RDX', 'RSI', 'RDI']
 
 let clock = 0.482913
 
@@ -79,115 +76,70 @@ const makeLine = () => {
   const ts = `[${clock.toFixed(6).padStart(12)}]`
   const r = Math.random()
 
-  if (r < 0.5) return `${ts}  ${TRACE[rand(TRACE.length)]}`
-  if (r < 0.68) return `${REGS[rand(REGS.length)]}: ${hex(16)}  ${REGS[rand(REGS.length)]}: ${hex(16)}`
-  if (r < 0.78) return `RIP: 0010:skala_render+0x${hex(2)}/0x${hex(3)} [skala]`
-  if (r < 0.86) return `RSP: 0018:ffff${hex(12)} EFLAGS: 000${hex(5)}`
-  if (r < 0.93) return `CR2: ${hex(16)} CR3: ${hex(15)}4 CR4: 00${hex(6)}`
-  return `${ts}  Kernel panic - not syncing: Fatal exception`
+  if (r < 0.55) return `${ts}  ${TRACE[rand(TRACE.length)]}`
+  if (r < 0.74) return `${REGS[rand(REGS.length)]}: ${hex(16)}  ${REGS[rand(REGS.length)]}: ${hex(16)}`
+  if (r < 0.87) return `RIP: 0010:skala_render+0x${hex(2)}/0x${hex(3)} [skala]`
+  return `RSP: 0018:ffff${hex(12)} EFLAGS: 000${hex(5)}`
 }
 
-/* ---------------------------------------------------------------- 격자 */
+/* ---------------------------------------------------------------- 배너 */
 
-/** SKALA 글자를 격자로 바꿔 목표로 삼는다 */
-const buildTarget = () => {
+/** SKALA를 블록 문자 배너로 만든다 */
+const makeBanner = () => {
   const off = document.createElement('canvas')
-  off.width = cols
-  off.height = rows
+  off.width = BANNER_COLS
+  off.height = BANNER_ROWS
   const octx = off.getContext('2d', { willReadFrequently: true })
 
   octx.fillStyle = '#fff'
   octx.textAlign = 'center'
   octx.textBaseline = 'middle'
-  // 화면이 좁아도 잘리지 않도록 가로 폭도 함께 본다
-  const size = Math.min(rows * 0.4, cols * 0.16)
-  octx.font = `800 ${size}px "IBM Plex Mono", monospace`
-  octx.fillText('SKALA', cols / 2, rows / 2)
+  octx.font = `800 ${BANNER_ROWS * 1.2}px "IBM Plex Mono", monospace`
+  octx.fillText('SKALA', BANNER_COLS / 2, BANNER_ROWS / 2)
 
-  const data = octx.getImageData(0, 0, cols, rows).data
-  target = new Uint8Array(cols * rows)
-  for (let i = 0; i < target.length; i++) {
-    target[i] = data[i * 4 + 3] > 110 ? 1 : 0
-  }
-}
-
-/** 한 세대 진행 (B3/S23). 굳은 칸은 규칙에서 제외한다. */
-const step = () => {
-  const next = new Uint8Array(grid.length)
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const idx = y * cols + x
-      if (lockMap[idx]) {
-        next[idx] = 1
-        continue
-      }
-      let n = 0
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue
-          n += grid[((y + dy + rows) % rows) * cols + ((x + dx + cols) % cols)]
-        }
-      }
-      next[idx] = grid[idx] ? (n === 2 || n === 3 ? 1 : 0) : n === 3 ? 1 : 0
+  const data = octx.getImageData(0, 0, BANNER_COLS, BANNER_ROWS).data
+  const out = []
+  for (let y = 0; y < BANNER_ROWS; y++) {
+    let row = ''
+    for (let x = 0; x < BANNER_COLS; x++) {
+      row += data[(y * BANNER_COLS + x) * 4 + 3] > 110 ? '█' : ' '
     }
+    // 오른쪽 빈칸은 그릴 필요가 없다
+    out.push(row.replace(/\s+$/, ''))
   }
-  grid = next
-}
-
-/** 목표 글자를 progress만큼 굳힌다 (난수 순서라 흩뿌려지듯 모인다) */
-const applyLock = (progress) => {
-  for (let i = 0; i < target.length; i++) {
-    if (target[i] && lockOrder[i] < progress) {
-      lockMap[i] = 1
-      grid[i] = 1
-    }
-  }
+  return out
 }
 
 /* ---------------------------------------------------------------- 렌더 */
 
-const LINE_H = 18
-
 /**
- * 1단계: 화면은 고정한 채 위에서부터 한 줄씩 찍힌다.
- * 스크롤로 흘려보내면 글자가 읽히지 않아, 콘솔이 출력하듯 쌓아 올린다.
+ * 화면은 고정한 채 위에서부터 쌓아 올린다.
+ * 배너는 블록이 서로 붙도록 줄 간격을 글자 크기에 맞춘다.
  */
-const renderCode = (count, alpha = 1) => {
+const renderFrame = (dumpCount, tailCount, bannerCount) => {
   ctx.fillStyle = BG
   ctx.fillRect(0, 0, w, h)
-
-  ctx.font = '13px "IBM Plex Mono", monospace'
   ctx.textBaseline = 'top'
-  ctx.globalAlpha = alpha
 
-  const shown = Math.min(count, lines.length)
+  ctx.font = `${FONT_SIZE}px "IBM Plex Mono", monospace`
+  const shown = Math.min(dumpCount, lines.length)
   for (let i = 0; i < shown; i++) {
-    // 마지막 몇 줄은 방금 찍힌 것처럼 밝게
-    ctx.fillStyle = i > shown - 4 ? CODE : CODE_DIM
-    ctx.fillText(lines[i], 28, 24 + i * LINE_H)
+    // 방금 찍힌 줄은 밝게
+    ctx.fillStyle = i > shown - 4 ? CODE : DIM
+    ctx.fillText(lines[i], PAD_X, PAD_Y + i * LINE_H)
   }
-  ctx.globalAlpha = 1
-}
 
-/** 2단계: 점이 SKALA로 모이는 화면 */
-const renderDots = (codeAlpha, count) => {
-  ctx.fillStyle = BG
-  ctx.fillRect(0, 0, w, h)
+  for (let i = 0; i < tailCount; i++) {
+    ctx.fillStyle = CODE
+    ctx.fillText(TAIL[i], PAD_X, PAD_Y + (lines.length + i) * LINE_H)
+  }
 
-  // 남은 코드가 옅게 비친다
-  if (codeAlpha > 0.01) renderCode(count, codeAlpha * 0.5)
-
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const idx = y * cols + x
-      if (lockMap[idx]) {
-        ctx.fillStyle = LIGHT
-      } else if (grid[idx]) {
-        ctx.fillStyle = DOT // 아직 떠도는 점은 흐리게
-      } else {
-        continue
-      }
-      ctx.fillRect(x * PX, y * PX, PX, PX)
+  if (bannerCount > 0) {
+    const top = PAD_Y + (lines.length + TAIL.length) * LINE_H
+    ctx.font = `${bannerFont}px "IBM Plex Mono", monospace`
+    ctx.fillStyle = BRIGHT
+    for (let i = 0; i < bannerCount; i++) {
+      ctx.fillText(banner[i], PAD_X, top + i * bannerFont)
     }
   }
 }
@@ -217,53 +169,45 @@ const run = () => {
   ctx = canvas.getContext('2d')
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-  cols = Math.ceil(w / PX)
-  rows = Math.ceil(h / PX)
+  banner = makeBanner()
 
-  grid = new Uint8Array(cols * rows)
-  lockMap = new Uint8Array(cols * rows)
-  lockOrder = new Float32Array(cols * rows)
-  for (let i = 0; i < lockOrder.length; i++) lockOrder[i] = Math.random()
+  // 배너가 가로로 넘치지 않게 글자 크기를 맞춘다
+  ctx.font = `${bannerFont}px "IBM Plex Mono", monospace`
+  const charW = ctx.measureText('█').width || bannerFont * 0.6
+  const maxW = w - PAD_X * 2
+  if (charW * BANNER_COLS > maxW) {
+    bannerFont = Math.max(6, Math.floor((bannerFont * maxW) / (charW * BANNER_COLS)))
+  }
 
-  buildTarget()
-  lines = Array.from({ length: Math.ceil(h / LINE_H) + 4 }, makeLine)
-  // 맨 처음 눈에 들어오는 자리에 패닉 헤더를 박아 둔다
-  lines[0] = '[    0.482913]  Kernel panic - not syncing: Fatal exception in interrupt'
+  // 배너까지 들어갈 자리를 남겨 두고 덤프 줄 수를 정한다
+  const bannerH = BANNER_ROWS * bannerFont
+  const room = h - PAD_Y * 2 - bannerH - TAIL.length * LINE_H
+  const dumpCount = Math.max(5, Math.floor(room / LINE_H))
+
+  lines = Array.from({ length: dumpCount }, makeLine)
+  lines[0] = '[    0.482913]  Kernel panic - not syncing: Fatal exception'
   lines[1] = '[    0.482914]  CPU: 0 PID: 1 Comm: skala Not tainted 6.8.0-skala'
   lines[2] = '[    0.482915]  Call Trace:'
 
   const startedAt = performance.now()
-  let lastTick = 0
-  let seeded = false
+  const totalSteps = TAIL.length + BANNER_ROWS
 
   const loop = (now) => {
     const elapsed = now - startedAt
 
-    if (elapsed >= SCROLL + ASSEMBLE + HOLD) {
-      finish()
-      return
-    }
-
-    if (elapsed < SCROLL) {
-      // 1단계: 위에서부터 한 줄씩 쌓인다 (화면은 고정)
-      renderCode(Math.ceil((elapsed / SCROLL) * lines.length))
+    if (elapsed < DUMP) {
+      // 1단계: 덤프가 한 줄씩 찍힌다
+      renderFrame(Math.ceil((elapsed / DUMP) * lines.length), 0, 0)
     } else {
-      // 2단계: 글자가 점으로 무너지고 SKALA로 모인다
-      if (!seeded) {
-        seeded = true
-        // 화면에 떠 있던 코드를 점으로 흩어 놓는다
-        for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.22 ? 1 : 0
-      }
+      // 2단계: 종료 줄에 이어 SKALA 배너가 한 줄씩 출력된다
+      const step = Math.min(totalSteps, Math.floor((elapsed - DUMP) / TICK))
+      renderFrame(lines.length, Math.min(TAIL.length, step), step - TAIL.length)
 
-      const t = Math.min(1, (elapsed - SCROLL) / ASSEMBLE)
-      if (now - lastTick >= TICK) {
-        lastTick = now
-        step()
-        applyLock(t * t) // 처음엔 천천히, 뒤로 갈수록 빠르게 모인다
+      if (elapsed >= DUMP + TICK * totalSteps + HOLD) {
+        finish()
+        return
       }
-      renderDots(Math.max(0, 1 - t * 2.5), lines.length)
     }
-
     raf = requestAnimationFrame(loop)
   }
   raf = requestAnimationFrame(loop)
