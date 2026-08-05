@@ -37,6 +37,8 @@ export function createLifeEngine(canvas, options = {}) {
   let colors = options.colors ?? { cell: '#000', lock: '#000' }
   // 0이면 칸을 꽉 채운다(하프톤 느낌). 0.42면 가운데가 뚫린 고리 모양.
   let holeRatio = options.holeRatio ?? 0
+  // 잠긴 칸을 얼마나 더 밝게 그릴지. 너무 크면 1.0을 넘겨 단색이 된다.
+  let lockBoost = options.lockBoost ?? 1.7
 
   let cols = 0
   let rows = 0
@@ -230,7 +232,7 @@ export function createLifeEngine(canvas, options = {}) {
     }
 
     // 2) 잠긴 칸은 더 밝게 그려 그림이 노이즈 위로 드러나게 한다
-    ctx.globalAlpha = Math.min(alpha * 2.1, 1)
+    ctx.globalAlpha = Math.min(alpha * lockBoost, 1)
     ctx.fillStyle = colors.lock
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {

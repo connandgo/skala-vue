@@ -7,13 +7,66 @@ import { lifePhase } from '@/utils/lifeState.js'
 /* ================================================================
    조정용 상수 - 눈으로 보고 여기만 만지면 된다
    ================================================================ */
-const ALPHA = 0.16 // 배경 진하기. 0.2를 넘기면 콘텐츠와 경쟁한다
+// 배경 진하기. 콘텐츠 카드가 불투명해 글자 뒤에 깔리지 않으므로
+// 레퍼런스처럼 또렷하게 보이도록 높게 잡는다.
+const ALPHA = 0.34
+const LOCK_BOOST = 1.7 // 잠긴 칸(그림)을 얼마나 더 밝게
 const CELL = 4 // 기본 칸 크기. 4 미만으로 내리면 계산량이 급증
 const CELL_HEAVY = 6 // 지도가 있는 무거운 라우트용
 const DURATION = 3000 // 애니메이션 길이(ms)
 const TICK = 110 // 세대 간격(ms). 60fps로 돌릴 이유가 없다
 const SEED_DENSITY = 0.3
 const GLIDER_STEPS = 26
+
+
+/* ================================================================
+   구름 텍스처 생성 (fBm - 다중 옥타브 값 노이즈)
+
+   원을 여러 개 겹치는 방식으로는 실제 구름의 결이 안 나온다.
+   해상도를 반씩 줄여 가며 노이즈를 겹쳐 쌓으면(fBm)
+   큰 덩어리 + 잔결이 동시에 생겨 사진 같은 구름 톤이 만들어진다.
+   ================================================================ */
+const hash = (x, y, s) => {
+  let h = (x * 374761393 + y * 668265263 + s * 1013904223) | 0
+  h = ((h ^ (h >>> 13)) * 1274126177) | 0
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295
+}
+
+const smoothstep = (t) => t * t * (3 - 2 * t)
+
+/** 격자점 난수를 부드럽게 보간한 값 노이즈 */
+const valueNoise = (x, y, s) => {
+  const xi = Math.floor(x)
+  const yi = Math.floor(y)
+  const xf = x - xi
+  const yf = y - yi
+  const a = hash(xi, yi, s)
+  const b = hash(xi + 1, yi, s)
+  const c = hash(xi, yi + 1, s)
+  const d = hash(xi + 1, yi + 1, s)
+  const u = smoothstep(xf)
+  const v = smoothstep(yf)
+  return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v
+}
+
+/** 옥타브를 겹쳐 쌓아 구름 같은 농담을 만든다 */
+const fbm = (x, y, s, octaves = 6) => {
+  let value = 0
+  let amp = 0.5
+  let freq = 1
+  let norm = 0
+  for (let i = 0; i < octaves; i++) {
+    value += amp * valueNoise(x * freq, y * freq, s + i * 101)
+    norm += amp
+    amp *= 0.5
+    freq *= 2
+  }
+  return value / norm
+}
+
+const CLOUD_SEED = 7
+const CLOUD_SCALE = 5
+const CLOUD_GAIN = 1.15 // 대비. 키우면 구름 덩어리가 또렷해진다
 
 /* ================================================================
    라우트별 목표 그림
@@ -29,40 +82,40 @@ const SHAPES = {
    * 부드러운 원을 여러 겹 겹쳐 뭉게구름의 밝기 분포를 만들고,
    * 이 톤을 Bayer 디더링으로 넘기면 점의 밀도로 표현된다. (dither: true)
    */
+  /**
+   * 홈(날씨 대시보드) - 화면 전체를 덮는 구름 톤.
+   * 픽셀마다 fBm 값을 직접 써 넣고, 그 톤을 Bayer 디더링이 점의 밀도로 바꾼다.
+   */
   weather: (ctx, c, r) => {
-    ctx.globalCompositeOperation = 'lighter'
+    const img = ctx.createImageData(c, r)
+    const buf = new Float32Array(c * r)
 
-    // 부드러운 덩어리 하나 (가장자리로 갈수록 서서히 옅어진다)
-    const puff = (cx, cy, rad, strength) => {
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad)
-      g.addColorStop(0, `rgba(255,255,255,${strength})`)
-      g.addColorStop(0.55, `rgba(255,255,255,${strength * 0.45})`)
-      g.addColorStop(1, 'rgba(255,255,255,0)')
-      ctx.fillStyle = g
-      ctx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2)
+    let min = 1
+    let max = 0
+    for (let y = 0; y < r; y++) {
+      for (let x = 0; x < c; x++) {
+        // 세로를 눌러(0.56) 구름이 가로로 퍼진 모양이 되게 한다
+        const v = fbm((x / c) * CLOUD_SCALE, (y / r) * CLOUD_SCALE * 0.56, CLOUD_SEED)
+        buf[y * c + x] = v
+        if (v < min) min = v
+        if (v > max) max = v
+      }
     }
 
-    // 아래로 갈수록 짙어지는 바탕 (하늘 -> 구름층)
-    const base = ctx.createLinearGradient(0, r * 0.35, 0, r)
-    base.addColorStop(0, 'rgba(255,255,255,0)')
-    base.addColorStop(1, 'rgba(255,255,255,0.42)')
-    ctx.fillStyle = base
-    ctx.fillRect(0, 0, c, r)
-
-    // 뭉게구름 덩어리들. y가 클수록(아래쪽) 크고 진하게 깔린다.
-    const blobs = [
-      [0.08, 0.72, 0.30, 0.55], [0.22, 0.84, 0.34, 0.62],
-      [0.37, 0.70, 0.26, 0.48], [0.50, 0.88, 0.32, 0.58],
-      [0.63, 0.74, 0.28, 0.50], [0.78, 0.86, 0.34, 0.60],
-      [0.93, 0.72, 0.30, 0.52],
-      [0.15, 0.55, 0.20, 0.30], [0.45, 0.52, 0.18, 0.26],
-      [0.72, 0.57, 0.22, 0.32], [0.90, 0.48, 0.17, 0.24],
-    ]
-    for (const [fx, fy, fr, st] of blobs) {
-      puff(c * fx, r * fy, r * fr, st)
+    // 실제로 나온 범위를 0~1로 펴고 대비를 준다
+    const span = max - min || 1
+    for (let i = 0; i < buf.length; i++) {
+      let v = (buf[i] - min) / span
+      v = (v - 0.5) * CLOUD_GAIN + 0.5
+      v = v < 0 ? 0 : v > 1 ? 1 : v
+      const g = Math.round(v * 255)
+      const p = i * 4
+      img.data[p] = g
+      img.data[p + 1] = g
+      img.data[p + 2] = g
+      img.data[p + 3] = 255
     }
-
-    ctx.globalCompositeOperation = 'source-over'
+    ctx.putImageData(img, 0, 0)
   },
 
   // 영화 - 필름 스트립이 화면을 가로로 관통
@@ -265,6 +318,7 @@ onMounted(() => {
     alpha: ALPHA,
     colors: readColors(),
     holeRatio: 0, // 칸을 꽉 채워 하프톤 점처럼 보이게 한다
+    lockBoost: LOCK_BOOST,
   })
 
   window.addEventListener('resize', onResize)
