@@ -19,7 +19,7 @@ const routes = [
   {
     path: '/weather',
     name: 'WeatherHome',
-    component: () => import('@/views/WeatherHomeView.vue'),
+    component: () => import('@/views/WeatherView.vue'),
   },
   {
     // :cityId 자리에 들어온 값을 페이지에서 route.params.cityId로 받는다

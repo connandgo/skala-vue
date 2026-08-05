@@ -15,9 +15,6 @@ const load = async () => {
   errorMessage.value = ''
   try {
     result.value = await fetchBoxOffice(type.value, date.value)
-    console.log(
-      `[KOFIC] ${result.value.label} ${result.value.range} · ${result.value.movies.length}편`,
-    )
 
     // 포스터는 부가 정보라 목록을 먼저 보여주고 나중에 채운다 (있으면)
     if (hasTmdbKey) loadPosters(result.value.movies)

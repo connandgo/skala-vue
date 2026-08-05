@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import WeatherDetail from '@/components/exercise/WeatherDetail.vue'
+import CityPanel from '@/components/weather/CityPanel.vue'
 import { CITIES, getMockWeather } from '@/data/cities.js'
 import { fetchCityWeather, fetchCityForecast } from '@/api/weather.js'
 import { fxMode, modeFromWeatherId } from '@/utils/weatherFx.js'
@@ -32,7 +32,6 @@ onMounted(async () => {
     city.value = current
     forecast.value = fc
     fxMode.value = modeFromWeatherId(current.weatherId)
-    console.log(`[상세] ${current.name} (${cityId}) 조회 완료`)
   } catch (err) {
     // 통신이 실패하면 도시 코드에 해당하는 Mock Data로 대체해 화면을 채운다
     console.warn('[상세] API 실패 → Mock Data로 대체:', err.message)
@@ -66,7 +65,7 @@ const goBack = () => {
       <p v-if="isMock" class="mock-notice">
         실시간 조회에 실패해 도시 코드({{ cityId }})의 임시 데이터(Mock)를 표시합니다.
       </p>
-      <WeatherDetail :city-item="city" :forecast="forecast" />
+      <CityPanel :city-item="city" :forecast="forecast" />
     </template>
 
     <div class="actions">

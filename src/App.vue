@@ -6,7 +6,7 @@ import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
 import { RouterLink, RouterView } from 'vue-router'
-import UnitToggler from '@/components/exercise/UnitToggler.vue'
+import UnitToggler from '@/components/UnitToggler.vue'
 
 // 최초 진입 인트로 (세션당 1회)
 const showIntro = ref(true)
