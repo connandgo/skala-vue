@@ -84,14 +84,24 @@ const SHAPES = {
     ctx.fillText('}', c * 1.015, r * 0.5)
   },
 
-  // 소개 - 로고 텍스트
+  // 소개(메인) - 구체.
+  // 밝기가 부드럽게 변하는 면이라 디더링의 점 밀도가 가장 잘 드러난다.
   about: (ctx, c, r) => {
-    ctx.fillStyle = tone(FG_TONE)
-    ctx.font = `800 ${r * 0.26}px "IBM Plex Mono", monospace`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('SKALA', c * 0.5, r * 0.2)
-    ctx.fillText('SKALA', c * 0.5, r * 0.82)
+    const cx = c * 0.5
+    const cy = r * 0.46
+    const R = Math.min(c, r) * 0.34
+
+    // 빛은 왼쪽 위에서 든다. 중심을 그쪽으로 밀면 구가 둥글게 보인다.
+    const g = ctx.createRadialGradient(cx - R * 0.38, cy - R * 0.42, R * 0.04, cx, cy, R)
+    g.addColorStop(0, tone(1)) // 하이라이트
+    g.addColorStop(0.42, tone(0.74))
+    g.addColorStop(0.78, tone(0.33))
+    g.addColorStop(1, tone(0.1)) // 그림자 쪽 가장자리
+
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(cx, cy, R, 0, Math.PI * 2)
+    ctx.fill()
   },
 }
 
