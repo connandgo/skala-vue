@@ -34,7 +34,9 @@ export function createLifeEngine(canvas, options = {}) {
 
   let cellSize = options.cellSize ?? 5
   let alpha = options.alpha ?? 0.16
-  let colors = options.colors ?? { cell: '#000', lock: '#000' }
+  // 단계별 색. index 0은 '아무것도 안 그림', 1부터 밝기 단계.
+  let palette = options.palette ?? ['', '#000']
+  let liveLevel = options.liveLevel ?? 1 // 라이프 잔해를 그릴 단계
   // 0이면 칸을 꽉 채운다(하프톤 느낌). 0.42면 가운데가 뚫린 고리 모양.
   let holeRatio = options.holeRatio ?? 0
   // 잠긴 칸을 얼마나 더 밝게 그릴지. 너무 크면 1.0을 넘겨 단색이 된다.
@@ -85,7 +87,7 @@ export function createLifeEngine(canvas, options = {}) {
    * painter가 cols x rows 크기의 캔버스에 아무 그림이나 그리면,
    * 불투명한 픽셀이 "살아있는 칸"이 된다.
    */
-  function rasterize(painter, dither = false) {
+  function rasterize(painter, dither = false, levels = 1) {
     const off = document.createElement('canvas')
     off.width = cols
     off.height = rows
@@ -101,33 +103,41 @@ export function createLifeEngine(canvas, options = {}) {
     if (!dither) {
       // 글자·도형처럼 경계가 뚜렷해야 하는 그림은 임계값 하나로 자른다
       for (let i = 0; i < out.length; i++) {
-        out[i] = data[i * 4 + 3] > 110 ? 1 : 0
+        out[i] = data[i * 4 + 3] > 110 ? levels : 0
       }
       return out
     }
 
-    // 구름처럼 농담이 있는 그림은 Bayer 디더링으로 '점의 밀도'로 바꾼다.
-    // 밝을수록 점이 촘촘해져 하프톤 인쇄물 같은 질감이 생긴다.
+    // 농담이 있는 그림은 Bayer 디더링으로 '단계'를 매긴다.
+    //
+    // 2색(있다/없다)으로만 자르면 균일한 노이즈로 보인다.
+    // 밝기를 여러 단계로 나누고 그 사이 값을 Bayer로 흩뿌리면,
+    // 성긴 점 / 십자 / 촘촘한 격자가 섞인 인쇄물 같은 결이 나온다.
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const i = (y * cols + x) * 4
         const a = data[i + 3] / 255
         const lum = ((data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255) * a
-        out[y * cols + x] = lum > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
+
+        const scaled = lum * levels
+        const base = Math.floor(scaled)
+        const frac = scaled - base
+        const bump = frac > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
+        out[y * cols + x] = Math.min(levels, base + bump)
       }
     }
     return out
   }
 
   /** 그림에서 시작 (인트로용 - 그림이 라이프 규칙으로 무너진다) */
-  function seedShape(painter, dither = false) {
-    grid = rasterize(painter, dither)
+  function seedShape(painter, dither = false, levels = 1) {
+    grid = rasterize(painter, dither, levels)
     lockMap.fill(0)
   }
 
   /** 도달할 목표 그림을 설정한다 */
-  function setTarget(painter, dither = false) {
-    target = rasterize(painter, dither)
+  function setTarget(painter, dither = false, levels = 1) {
+    target = rasterize(painter, dither, levels)
     lockMap.fill(0)
 
     // 매번 새 랜덤값을 채워야 그림이 나타나는 순서가 달라진다.
@@ -147,8 +157,8 @@ export function createLifeEngine(canvas, options = {}) {
   function applyLock(progress) {
     if (!target) return
     for (let i = 0; i < target.length; i++) {
-      if (target[i] === 1 && lockOrder[i] < progress) {
-        lockMap[i] = 1
+      if (target[i] > 0 && lockOrder[i] < progress) {
+        lockMap[i] = target[i] // 단계값을 그대로 보관해 색을 고른다
         grid[i] = 1
       }
     }
@@ -225,60 +235,33 @@ export function createLifeEngine(canvas, options = {}) {
     const w = canvas.width / dpr
     const h = canvas.height / dpr
     ctx.clearRect(0, 0, w, h)
-
-    const hole = cellSize * holeRatio
-    const off = (cellSize - hole) / 2
-
-    // 1) 살아있고 잠기지 않은 칸
-    ctx.globalCompositeOperation = 'source-over'
-    ctx.globalAlpha = alpha
-    ctx.fillStyle = colors.cell
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const idx = y * cols + x
-        if (grid[idx] && !lockMap[idx]) {
-          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
-        }
-      }
-    }
-
-    // 2) 잠긴 칸은 더 밝게 그려 그림이 노이즈 위로 드러나게 한다
-    ctx.globalAlpha = Math.min(alpha * lockBoost, 1)
-    ctx.fillStyle = colors.lock
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        if (lockMap[y * cols + x]) {
-          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
-        }
-      }
-    }
-
-    // 3) 가운데를 뚫는다(holeRatio > 0 일 때만).
-    //    배경색을 덮어씌우는 대신 지우기 합성을 써서
-    //    페이지 배경이 무슨 색이든(테마 전환 포함) 그대로 비치게 한다.
-    if (hole <= 0) {
-      ctx.globalAlpha = 1
-      return
-    }
-    ctx.globalCompositeOperation = 'destination-out'
-    ctx.globalAlpha = 1
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const idx = y * cols + x
-        if (grid[idx] || lockMap[idx]) {
-          ctx.fillRect(x * cellSize + off, y * cellSize + off, hole, hole)
-        }
-      }
-    }
-
     ctx.globalCompositeOperation = 'source-over'
     ctx.globalAlpha = 1
+
+    // 같은 색끼리 모아 칠해야 fillStyle 전환이 줄어 빠르다
+    for (let lv = 1; lv < palette.length; lv++) {
+      const color = palette[lv]
+      if (!color) continue
+      ctx.fillStyle = color
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const idx = y * cols + x
+          const locked = lockMap[idx]
+          // 잠긴 칸은 자기 단계로, 잠기지 않은 생존 칸은 지정된 단계로 그린다
+          const level = locked || (grid[idx] ? liveLevel : 0)
+          if (level === lv) {
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+          }
+        }
+      }
+    }
   }
 
   /* ---------------------------------------------------------------- 설정 */
 
-  function setColors(next) {
-    colors = next
+  function setPalette(next) {
+    palette = next
   }
 
   function setCellSize(next) {
@@ -299,7 +282,7 @@ export function createLifeEngine(canvas, options = {}) {
     spawnGlider,
     clearUnlocked,
     draw,
-    setColors,
+    setPalette,
     setCellSize,
     setHoleRatio,
     get size() {

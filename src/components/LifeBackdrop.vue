@@ -9,8 +9,7 @@ import { lifePhase } from '@/utils/lifeState.js'
    ================================================================ */
 // 배경 진하기. 콘텐츠 카드가 불투명해 글자 뒤에 깔리지 않으므로
 // 레퍼런스처럼 또렷하게 보이도록 높게 잡는다.
-const ALPHA = 0.34
-const LOCK_BOOST = 1 // 최종 화면은 그림만 남으므로 밝기를 나눌 필요가 없다
+const LEVELS = 4 // 밝기 단계 수. 많을수록 결이 다양해진다
 const CELL = 4 // 기본 칸 크기. 4 미만으로 내리면 계산량이 급증
 const CELL_HEAVY = 6 // 지도가 있는 무거운 라우트용
 const DURATION = 3000 // 애니메이션 길이(ms)
@@ -65,10 +64,7 @@ const fbm = (x, y, s, octaves = 6) => {
 }
 
 const CLOUD_SEED = 7
-const CLOUD_SCALE = 3.2 // 작을수록 구름 덩어리가 크다
-const CLOUD_GAIN = 2.6 // 대비. 이 값이 낮으면 전체가 균일한 노이즈로 보인다
-const CLOUD_BIAS = -0.06 // 전체 밝기. 음수면 빈 하늘이 넓어진다
-const CLOUD_OCTAVES = 4 // 적을수록 덩어리가 뭉근하고, 많을수록 잘게 부서진다
+const CLOUD_OCTAVES = 5
 
 /* ================================================================
    라우트별 목표 그림
@@ -88,34 +84,56 @@ const SHAPES = {
    * 홈(날씨 대시보드) - 화면 전체를 덮는 구름 톤.
    * 픽셀마다 fBm 값을 직접 써 넣고, 그 톤을 Bayer 디더링이 점의 밀도로 바꾼다.
    */
+  /**
+   * 홈(날씨 대시보드) - 화면 아래를 채우는 적운(뭉게구름).
+   *
+   * 1) 밑변은 평평하고 위로 부풀어 오르는 적운 실루엣을 원을 겹쳐 만든다
+   * 2) 그 안을 fBm 노이즈로 명암 처리해 덩어리진 결을 넣는다
+   * 3) 이 톤을 다단계 Bayer 디더링이 여러 밝기의 점 패턴으로 바꾼다
+   */
   weather: (ctx, c, r) => {
+    const baseY = r * 0.98 // 구름 밑변
     const img = ctx.createImageData(c, r)
-    const buf = new Float32Array(c * r)
 
-    let min = 1
-    let max = 0
+    // 적운 덩어리들 [중심x비율, 중심y비율, 반지름비율]
+    const lumps = [
+      [0.04, 0.90, 0.13], [0.11, 0.80, 0.15], [0.18, 0.70, 0.13],
+      [0.25, 0.78, 0.16], [0.32, 0.66, 0.14], [0.39, 0.74, 0.17],
+      [0.46, 0.62, 0.15], [0.52, 0.72, 0.16], [0.59, 0.58, 0.16],
+      [0.66, 0.70, 0.18], [0.73, 0.62, 0.15], [0.80, 0.72, 0.17],
+      [0.87, 0.66, 0.15], [0.94, 0.78, 0.16], [1.00, 0.86, 0.14],
+      // 위로 솟은 봉우리
+      [0.30, 0.54, 0.09], [0.44, 0.48, 0.10], [0.62, 0.46, 0.09],
+      [0.76, 0.52, 0.08],
+    ]
+
     for (let y = 0; y < r; y++) {
       for (let x = 0; x < c; x++) {
-        // 세로를 눌러(0.56) 구름이 가로로 퍼진 모양이 되게 한다
-        const v = fbm((x / c) * CLOUD_SCALE, (y / r) * CLOUD_SCALE * 0.56, CLOUD_SEED, CLOUD_OCTAVES)
-        buf[y * c + x] = v
-        if (v < min) min = v
-        if (v > max) max = v
-      }
-    }
+        // 실루엣 안쪽일수록 1에 가까운 값 (가장자리는 부드럽게 떨어진다)
+        let inside = 0
+        for (const [fx, fy, fr] of lumps) {
+          const dx = (x - c * fx) / (r * fr)
+          const dy = (y - r * fy) / (r * fr)
+          const d = Math.sqrt(dx * dx + dy * dy)
+          if (d < 1) inside = Math.max(inside, 1 - d * d)
+        }
+        if (y > baseY) inside = 0 // 밑변 아래는 잘라 평평하게
 
-    // 실제로 나온 범위를 0~1로 펴고 대비를 준다
-    const span = max - min || 1
-    for (let i = 0; i < buf.length; i++) {
-      let v = (buf[i] - min) / span
-      v = (v - 0.5) * CLOUD_GAIN + 0.5 + CLOUD_BIAS
-      v = v < 0 ? 0 : v > 1 ? 1 : v
-      const g = Math.round(v * 255)
-      const p = i * 4
-      img.data[p] = g
-      img.data[p + 1] = g
-      img.data[p + 2] = g
-      img.data[p + 3] = 255
+        let tone = 0.06 // 빈 하늘에도 아주 옅은 결을 남긴다
+        if (inside > 0) {
+          // 구름 속 명암: 위쪽이 밝고 아래로 갈수록 어둡다 + 노이즈로 결
+          const n = fbm((x / c) * 7, (y / r) * 7 * 0.6, CLOUD_SEED, CLOUD_OCTAVES)
+          const shade = 1 - (y / r - 0.45) * 0.9
+          tone = Math.min(1, inside * 1.35 * shade * (0.55 + n * 0.75))
+        }
+
+        const g = Math.round(Math.max(0, Math.min(1, tone)) * 255)
+        const i = (y * c + x) * 4
+        img.data[i] = g
+        img.data[i + 1] = g
+        img.data[i + 2] = g
+        img.data[i + 3] = 255
+      }
     }
     ctx.putImageData(img, 0, 0)
   },
@@ -215,11 +233,26 @@ let resizeTimer = null
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-/** 현재 테마의 CSS 변수에서 색을 읽어 온다 (테마가 바뀌면 다시 호출) */
-const readColors = () => {
-  const s = getComputedStyle(document.documentElement)
-  const text = s.getPropertyValue('--text').trim() || '#000'
-  return { cell: text, lock: text }
+const toRgb = (hex) => {
+  const h = hex.replace('#', '')
+  const v = h.length === 3 ? h.split('').map((ch) => ch + ch).join('') : h
+  const n = parseInt(v, 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+/**
+ * 단계별 색을 만든다. 본문색과 배경색을 정해진 비율로 섞으므로
+ * 라이트/다크 어느 쪽에서도 대비가 유지된다.
+ * index 0은 '안 그림'.
+ */
+const readPalette = () => {
+  const st = getComputedStyle(document.documentElement)
+  const fg = toRgb(st.getPropertyValue('--text').trim() || '#000')
+  const bg = toRgb(st.getPropertyValue('--bg').trim() || '#fff')
+  const mix = (t) =>
+    `rgb(${Math.round(fg[0] * t + bg[0] * (1 - t))},${Math.round(fg[1] * t + bg[1] * (1 - t))},${Math.round(fg[2] * t + bg[2] * (1 - t))})`
+  // 옅은 결 -> 중간 -> 진한 덩어리
+  return ['', mix(0.16), mix(0.4), mix(0.72), mix(1)]
 }
 
 const easeInOutQuad = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2)
@@ -238,9 +271,9 @@ const restart = () => {
   const { painter, cell, dither } = resolveRoute(route.path)
   engine.setCellSize(cell)
   engine.resize()
-  engine.setColors(readColors())
+  engine.setPalette(readPalette())
   engine.seedRandom(SEED_DENSITY)
-  engine.setTarget(painter, dither === true)
+  engine.setTarget(painter, dither === true, LEVELS)
 
   // 모션을 줄이도록 설정한 사용자에게는 애니메이션 없이 결과만 보여준다
   if (reduceMotion) {
@@ -319,10 +352,8 @@ let themeObserver = null
 onMounted(() => {
   engine = createLifeEngine(canvasRef.value, {
     cellSize: CELL,
-    alpha: ALPHA,
-    colors: readColors(),
-    holeRatio: 0, // 칸을 꽉 채워 하프톤 점처럼 보이게 한다
-    lockBoost: LOCK_BOOST,
+    palette: readPalette(),
+    liveLevel: 2, // 라이프 잔해는 중간 밝기로
   })
 
   window.addEventListener('resize', onResize)
@@ -330,7 +361,7 @@ onMounted(() => {
   document.addEventListener('visibilitychange', onVisibility)
 
   themeObserver = new MutationObserver(() => {
-    engine.setColors(readColors())
+    engine.setPalette(readPalette())
     engine.draw()
   })
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
