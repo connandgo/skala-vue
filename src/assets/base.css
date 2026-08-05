@@ -171,3 +171,31 @@ hr {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
+
+/* ==========================================================================
+   여러 페이지가 함께 쓰는 조각들
+   ========================================================================== */
+
+/* 페이지 본문을 감싸는 판 */
+.dashboard-wrapper {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 20px;
+}
+
+/* 작은 꼬리표 (박스오피스 순위 변동 등) */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+/* 평년보다 높다 / 낮다 */
+.badge.hot,
+.badge.cold,
+.hot,
+.cold {
+  border-color: var(--text);
+}

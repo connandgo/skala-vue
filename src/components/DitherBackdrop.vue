@@ -41,15 +41,18 @@ const CEIL = 0.94
  * 파일은 public/ 에 두면 된다. 빌드하면 그대로 복사된다.
  */
 const PHOTOS = {
-  '/weather': `${import.meta.env.BASE_URL}sky.jpg`,
+  // mirror: 좌우 반전 사본을 겹칠지. 구름은 왼쪽이 비어 있어 필요하지만,
+  //         이미 화면을 채운 그림에 겹치면 형태가 두 겹으로 보인다.
+  '/': { src: `${import.meta.env.BASE_URL}home.png`, mirror: false },
+  '/weather': { src: `${import.meta.env.BASE_URL}sky.jpg`, mirror: true },
 }
 
-/** 그 경로에서 쓸 사진 주소 (없으면 빈 문자열) */
+/** 그 경로에서 쓸 사진 설정 (없으면 null) */
 const photoFor = (path) => {
   if (PHOTOS[path]) return PHOTOS[path]
   // /weather/city_01 처럼 하위 경로도 같은 사진을 쓴다
   const parent = Object.keys(PHOTOS).find((k) => k !== '/' && path.startsWith(k))
-  return parent ? PHOTOS[parent] : ''
+  return parent ? PHOTOS[parent] : null
 }
 
 // 원본 사진은 왼쪽이 빈 하늘이다.
@@ -439,7 +442,7 @@ const tone = (v) => {
  * 파일이 없거나 못 불러왔을 때는 도형으로 되돌아간다. (빈 화면 방지)
  */
 const resolveShape = (path) => {
-  if (photoFor(path) && image) return null
+  if (photoFor(path)?.src && image) return null
 
   if (path.startsWith('/movies')) return SHAPES.movies
   if (path.startsWith('/effects')) return SHAPES.effects
@@ -539,6 +542,8 @@ const drawPhoto = (octx) => {
   const mh = dh * MIRROR_ZOOM
   const mx = (cols - mw) / 2 + MIRROR_X * cols
   const my = (rows - mh) / 2 + MIRROR_Y * rows
+
+  if (!photoFor(route.path)?.mirror) return
 
   octx.globalCompositeOperation = 'lighten'
   octx.save()
@@ -825,7 +830,7 @@ let loadedSrc = ''
  * 도형만 쓰는 경로는 사진을 비우고 바로 그린다.
  */
 const loadPhotoFor = (path) => {
-  const src = photoFor(path)
+  const src = photoFor(path)?.src
 
   if (!src) {
     image = null

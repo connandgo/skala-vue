@@ -68,10 +68,10 @@ watch(
       <!-- 페이지 라우팅 Navigation Bar (RouterLink) -->
       <ul class="nav-links">
         <li><RouterLink to="/">소개</RouterLink></li>
-        <li><RouterLink to="/weather">날씨 대시보드</RouterLink></li>
         <li><RouterLink to="/news">AI 뉴스</RouterLink></li>
-        <li><RouterLink to="/movies">영화 순위</RouterLink></li>
         <li><RouterLink to="/effects">디자인 이펙트</RouterLink></li>
+        <li><RouterLink to="/movies">영화 순위</RouterLink></li>
+        <li><RouterLink to="/weather">날씨 대시보드</RouterLink></li>
       </ul>
 
       <div class="nav-actions">
@@ -138,10 +138,6 @@ watch(
 </template>
 
 <style>
-/* 실습 공통 스타일 (전역) */
-@import '@/assets/practice.css';
-@import '@/assets/exercise.css';
-
 /* 배경이 보이도록 페이지 자체는 투명하게 두고, 다크모드에선 도트를 반전 */
 body {
   background: transparent;
