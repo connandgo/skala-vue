@@ -21,6 +21,17 @@ export default defineConfig([
     },
   },
 
+  {
+    // scripts/ 는 브라우저가 아니라 Node에서 돈다 (process, console 등)
+    name: 'app/node-scripts',
+    files: ['scripts/**/*.{js,mjs}', '*.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   js.configs.recommended,
   ...pluginVue.configs['flat/essential'],
 
