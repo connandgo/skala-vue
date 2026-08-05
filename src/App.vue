@@ -6,7 +6,7 @@ import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
 import { RouterLink, RouterView } from 'vue-router'
-import UnitToggler from '@/components/UnitToggler.vue'
+import AuthMenu from '@/components/AuthMenu.vue'
 
 // 최초 진입 인트로 (세션당 1회)
 const showIntro = ref(true)
@@ -47,8 +47,8 @@ watch(isDark, (dark) => {
       </ul>
 
       <div class="nav-actions">
-        <!-- 요구사항 2) Navigation Bar 옆 단위 전환 -->
-        <UnitToggler />
+        <!-- 계정 (서버 없는 데모 - 이 브라우저에만 저장된다) -->
+        <AuthMenu />
 
         <button
           class="icon-btn"

@@ -16,9 +16,15 @@ export const useConfigStore = defineStore('config', () => {
     unit.value = unit.value === 'celsius' ? 'fahrenheit' : 'celsius'
   }
 
+  // 4. 두 칸짜리 UI에서 쓴다. 누른 칸이 이미 켜져 있으면 아무 일도 없어야 한다.
+  function setUnit(next) {
+    if (next === 'celsius' || next === 'fahrenheit') unit.value = next
+  }
+
   return {
     unit,
     unitSymbol,
     toggleUnit,
+    setUnit,
   }
 })

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import CityPanel from '@/components/weather/CityPanel.vue'
+import UnitToggler from '@/components/UnitToggler.vue'
 import { CITIES, getMockWeather } from '@/data/cities.js'
 import { fetchCityWeather, fetchCityForecast } from '@/api/weather.js'
 import { fxMode, modeFromWeatherId } from '@/utils/weatherFx.js'
@@ -52,9 +53,12 @@ const goBack = () => {
 
 <template>
   <header class="page-banner">
-    <p class="eyebrow">Detail · {{ cityId }}</p>
-    <h1 class="page-title">{{ city ? city.name : '지역 상세' }}</h1>
-    <p class="page-desc">동적 경로 <code>/weather/:cityId</code> 로 전달된 지역입니다.</p>
+    <div>
+      <p class="eyebrow">Detail · {{ cityId }}</p>
+      <h1 class="page-title">{{ city ? city.name : '지역 상세' }}</h1>
+      <p class="page-desc">동적 경로 <code>/weather/:cityId</code> 로 전달된 지역입니다.</p>
+    </div>
+    <UnitToggler />
   </header>
 
   <div class="dashboard-wrapper">
@@ -77,6 +81,11 @@ const goBack = () => {
 
 <style scoped>
 .page-banner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
   padding: 40px 0 24px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 28px;

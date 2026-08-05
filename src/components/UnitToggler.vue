@@ -1,41 +1,53 @@
 <script setup>
-// 요구사항 1) 단위 설정을 변경하는 UI
 import { useConfigStore } from '@/stores/configStore'
 
+/** 섭씨 / 화씨 전환. 지금 무엇이 선택돼 있는지 한눈에 보이도록 두 칸으로 둔다. */
 const configStore = useConfigStore()
 </script>
 
 <template>
-  <div class="unit-toggler">
-    <span class="unit-label">{{ configStore.unitSymbol }}</span>
+  <div class="unit" role="group" aria-label="온도 단위">
     <button
-      class="unit-btn"
-      :title="configStore.unit === 'celsius' ? '화씨로 변경' : '섭씨로 변경'"
-      @click="configStore.toggleUnit"
+      type="button"
+      :class="{ on: configStore.unit === 'celsius' }"
+      :aria-pressed="configStore.unit === 'celsius'"
+      @click="configStore.setUnit('celsius')"
     >
-      단위변경
+      ℃
+    </button>
+    <button
+      type="button"
+      :class="{ on: configStore.unit === 'fahrenheit' }"
+      :aria-pressed="configStore.unit === 'fahrenheit'"
+      @click="configStore.setUnit('fahrenheit')"
+    >
+      ℉
     </button>
   </div>
 </template>
 
 <style scoped>
-.unit-toggler {
+.unit {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.unit-label {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
-  min-width: 1.4em;
-  text-align: center;
-}
-
-.unit-btn {
+button {
   margin: 0;
-  padding: 4px 9px;
-  font-size: 0.75rem;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* 두 칸 사이의 테두리가 겹쳐 두꺼워지지 않게 한 칸을 당겨 붙인다 */
+button + button {
+  margin-left: -1px;
+}
+
+button.on {
+  position: relative; /* 겹친 테두리 위로 올라오도록 */
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
 }
 </style>

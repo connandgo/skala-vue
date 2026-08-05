@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import RegionMap from '@/components/weather/RegionMap.vue'
 import CityPanel from '@/components/weather/CityPanel.vue'
 import CityTable from '@/components/weather/CityTable.vue'
+import UnitToggler from '@/components/UnitToggler.vue'
 import { fetchAllCitiesWeather, fetchCityForecast } from '@/api/weather.js'
 import { fxMode, modeFromWeatherId } from '@/utils/weatherFx.js'
 
@@ -171,6 +172,11 @@ onMounted(loadWeather)
       </section>
 
       <section class="pane pane-detail">
+        <div class="pane-head">
+          <h2>상세 정보</h2>
+          <UnitToggler />
+        </div>
+
         <CityPanel
           :city-item="selectedCity"
           :forecast="forecast"
