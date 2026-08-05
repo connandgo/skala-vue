@@ -18,9 +18,9 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 const PX = 4 // 도트 한 칸 크기
 // 하늘(점이 성긴 곳)은 진한 회색, 아래로 갈수록 검정에 가까워진다
-const SKY_TOP = '#3d3d3d'
-const SKY_BOTTOM = '#141414'
-const EDGE = '#000000' // 구름 윤곽선
+const SKY_TOP = '#8a8a8a'
+const SKY_BOTTOM = '#565656'
+const EDGE = '#2b2b2b' // 구름 윤곽선
 const LIGHT = '#ffffff'
 // 흐린 값보다 이만큼 어두운 칸을 구름 윤곽선으로 본다.
 // 반경을 키우면 넓은 경계를, 임계값을 낮추면 더 많은 칸을 윤곽선으로 잡는다.
