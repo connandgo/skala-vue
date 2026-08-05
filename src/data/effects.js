@@ -209,7 +209,7 @@ a:hover::after { transform: scaleX(1); transform-origin: left; }`,
     id: 'bg',
     num: '04',
     title: '배경 패턴',
-    desc: '이미지 없이 CSS만으로 만듭니다. 눈에 띄기 시작하면 이미 실패입니다.',
+    desc: '화면 뒤에 은은하게 까는 무늬입니다.',
     items: [
       {
         id: 'mask',
@@ -297,7 +297,7 @@ background-size: 36px 36px;`,
     id: 'surface',
     num: '05',
     title: '표면 · 테두리',
-    desc: '그림자를 쓰지 않고 면과 면을 구분하는 방법들입니다.',
+    desc: '면과 면의 경계를 나타내는 방법입니다.',
     items: [
       {
         id: 'bracket',
