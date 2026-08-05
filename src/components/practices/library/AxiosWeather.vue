@@ -30,22 +30,22 @@ const handleFetchWeather = async () => {
 
 <template>
   <div class="practice-section">
-    <h2>⚡ Axios 통신 검증</h2>
+    <h2>Axios 통신 검증</h2>
     <button @click="handleFetchWeather" :disabled="isLoading">
       {{ isLoading ? '데이터 로딩 중...' : '실시간 날씨 데이터 당겨오기' }}
     </button>
     <div v-if="weatherData" class="result-card">
       <p>
-        📍 위치: <strong>{{ weatherData.name }}</strong>
+        위치: <strong>{{ weatherData.name }}</strong>
       </p>
       <p>
-        🌡️ 현재 기온: <strong>{{ weatherData.main.temp }}°C</strong> (정상 섭씨 변환 완료)
+        현재 기온: <strong>{{ weatherData.main.temp }}°C</strong> (정상 섭씨 변환 완료)
       </p>
       <p>
-        ☁️ 날씨 상태: <strong>{{ weatherData.weather[0].description }}</strong>
+        날씨 상태: <strong>{{ weatherData.weather[0].description }}</strong>
       </p>
       <p>
-        💧 습도: <strong>{{ weatherData.main.humidity }}%</strong>
+        습도: <strong>{{ weatherData.main.humidity }}%</strong>
       </p>
     </div>
     <div v-else>

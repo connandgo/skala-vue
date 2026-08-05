@@ -16,13 +16,13 @@ const load = async () => {
   try {
     result.value = await fetchBoxOffice(type.value, date.value)
     console.log(
-      `🎬 [KOFIC] ${result.value.label} ${result.value.range} · ${result.value.movies.length}편`,
+      `[KOFIC] ${result.value.label} ${result.value.range} · ${result.value.movies.length}편`,
     )
 
     // 포스터는 부가 정보라 목록을 먼저 보여주고 나중에 채운다 (있으면)
     if (hasTmdbKey) loadPosters(result.value.movies)
   } catch (err) {
-    console.error('❌ [KOFIC] 조회 실패:', err)
+    console.error('[KOFIC] 조회 실패:', err)
     errorMessage.value = err.message
     result.value = null
   } finally {

@@ -117,7 +117,7 @@ onMounted(() => {
 // 날씨가 바뀌면 입자를 새로 만든다
 watch(() => props.mode, start)
 
-// ⚠️ 애니메이션 루프와 이벤트를 반드시 정리한다 (메모리 누수 방지)
+// 애니메이션 루프와 이벤트를 반드시 정리한다 (메모리 누수 방지)
 onUnmounted(() => {
   stop()
   window.removeEventListener('resize', onResize)

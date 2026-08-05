@@ -96,7 +96,7 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
 })
 
-// ⚠️ 컴포넌트가 사라질 때 이벤트를 반드시 정리한다 (메모리 누수 방지)
+// 컴포넌트가 사라질 때 이벤트를 반드시 정리한다 (메모리 누수 방지)
 onUnmounted(() => {
   clearTimeout(timer)
   window.removeEventListener('resize', onResize)

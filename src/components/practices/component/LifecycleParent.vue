@@ -9,7 +9,7 @@ const isShow = ref(true)
   <div class="practice-section">
     <h2>Lifecycle Hook</h2>
     <button @click="isShow = !isShow" class="toggle-btn">
-      {{ isShow ? '🛑 실습 컴포넌트 파괴하기 (v-if="false")' : '🟢 실습 컴포넌트 다시 살리기' }}
+      {{ isShow ? '실습 컴포넌트 파괴하기 (v-if="false")' : '실습 컴포넌트 다시 살리기' }}
     </button>
     <hr />
 

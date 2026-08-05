@@ -56,7 +56,7 @@ export const fetchPoster = async (title, openDt = '') => {
     return result
   } catch (err) {
     // 포스터는 부가 정보이므로 실패해도 화면을 막지 않는다
-    console.warn(`⚠️ [TMDB] '${title}' 포스터 조회 실패:`, err.message)
+    console.warn(`[TMDB] '${title}' 포스터 조회 실패:`, err.message)
     cache.set(cacheKey, null)
     return null
   }

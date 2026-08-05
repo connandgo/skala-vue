@@ -41,12 +41,12 @@ const selectedCity = computed(
 )
 
 watch(selectedCityInfo, (newInfo) => {
-  console.log(`👁️‍🗨️ [watch 감지] 상태 바 문구가 업데이트되었습니다 -> "${newInfo}"`)
+  console.log(`[watch 감지] 상태 바 문구가 업데이트되었습니다 -> "${newInfo}"`)
 })
 
 watchEffect(() => {
   console.log(
-    `🤖 [watchEffect 자동 호출] 현재 검색어 '${searchQuery.value}'에 매칭되는 데이터를 필터링합니다.`,
+    `[watchEffect 자동 호출] 현재 검색어 '${searchQuery.value}'에 매칭되는 데이터를 필터링합니다.`,
   )
 })
 
@@ -59,12 +59,12 @@ const loadWeather = async () => {
     weatherList.value = list
     failedCities.value = failed
     updatedAt.value = new Date().toLocaleTimeString('ko-KR')
-    console.log(`✅ [API] ${list.length}개 도시 날씨 수신 완료`)
+    console.log(`[API] ${list.length}개 도시 날씨 수신 완료`)
 
     // 선택이 없으면 첫 번째 도시를 자동 선택해 화면이 비어 보이지 않게 한다
     if (!selectedId.value && list.length) selectCity(list[0])
   } catch (err) {
-    console.error('❌ [API] 날씨 조회 실패:', err)
+    console.error('[API] 날씨 조회 실패:', err)
     errorMessage.value = 'API 호출에 실패했습니다. .env의 키와 네트워크를 확인하세요.'
   } finally {
     isLoading.value = false
@@ -97,9 +97,9 @@ watch(selectedId, async (id) => {
   forecast.value = []
   try {
     forecast.value = await fetchCityForecast(city)
-    console.log(`📈 [API] ${city.name} 예보 ${forecast.value.length}건 수신`)
+    console.log(`[API] ${city.name} 예보 ${forecast.value.length}건 수신`)
   } catch (err) {
-    console.error('❌ [API] 예보 조회 실패:', err)
+    console.error('[API] 예보 조회 실패:', err)
   } finally {
     isForecastLoading.value = false
   }
@@ -122,7 +122,7 @@ const showDetail = (cityName, status) => {
     <!-- 지도: 지역을 고르는 곳 -->
     <BaseDashboardCard>
       <div class="box-head">
-        <h3>🗺️ 지역 선택</h3>
+        <h3>지역 선택</h3>
         <div class="box-actions">
           <span class="stamp">효과</span>
           <div class="fx-toggle">
@@ -149,7 +149,7 @@ const showDetail = (cityName, status) => {
       />
 
       <p v-if="failedCities.length" class="state-msg">
-        ⚠️ 일부 도시를 못 받았습니다: {{ failedCities.join(', ') }}
+        일부 도시를 못 받았습니다: {{ failedCities.join(', ') }}
       </p>
     </BaseDashboardCard>
 
@@ -165,7 +165,7 @@ const showDetail = (cityName, status) => {
     <!-- 전체 목록은 접어 두고 필요할 때만 펼친다 -->
     <BaseDashboardCard>
       <div class="box-head">
-        <h3>🏙️ 전체 지역 목록</h3>
+        <h3>전체 지역 목록</h3>
         <button @click="showList = !showList">
           {{ showList ? '접기' : `펼치기 (${filteredWeatherList.length})` }}
         </button>
@@ -181,7 +181,7 @@ const showDetail = (cityName, status) => {
         />
 
         <p v-if="!isLoading && filteredWeatherList.length === 0" class="empty-result">
-          😭 검색 결과와 일치하는 도시가 없습니다.
+          검색 결과와 일치하는 도시가 없습니다.
         </p>
       </template>
     </BaseDashboardCard>

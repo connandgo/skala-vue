@@ -32,10 +32,10 @@ onMounted(async () => {
     city.value = current
     forecast.value = fc
     fxMode.value = modeFromWeatherId(current.weatherId)
-    console.log(`📍 [상세] ${current.name} (${cityId}) 조회 완료`)
+    console.log(`[상세] ${current.name} (${cityId}) 조회 완료`)
   } catch (err) {
     // 통신이 실패하면 도시 코드에 해당하는 Mock Data로 대체해 화면을 채운다
-    console.warn('⚠️ [상세] API 실패 → Mock Data로 대체:', err.message)
+    console.warn('[상세] API 실패 → Mock Data로 대체:', err.message)
     city.value = getMockWeather(cityId)
     isMock.value = true
     if (!city.value) errorMessage.value = '날씨 정보를 불러오지 못했습니다.'
@@ -64,7 +64,7 @@ const goBack = () => {
 
     <template v-else-if="city">
       <p v-if="isMock" class="mock-notice">
-        ⚠️ 실시간 조회에 실패해 도시 코드({{ cityId }})의 임시 데이터(Mock)를 표시합니다.
+        실시간 조회에 실패해 도시 코드({{ cityId }})의 임시 데이터(Mock)를 표시합니다.
       </p>
       <WeatherDetail :city-item="city" :forecast="forecast" />
     </template>

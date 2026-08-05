@@ -70,7 +70,7 @@ export const fetchCityForecast = async (city, slots = 8) => {
   })
 
   return data.list.map((it) => {
-    // ⚠️ dt_txt는 UTC 문자열이다. 그대로 자르면 한국 시각과 9시간 어긋난다.
+    // dt_txt는 UTC 문자열이다. 그대로 자르면 한국 시각과 9시간 어긋난다.
     //    유닉스 시간(dt)을 Date로 바꿔 브라우저의 지역 시간으로 표시한다.
     const at = new Date(it.dt * 1000)
 

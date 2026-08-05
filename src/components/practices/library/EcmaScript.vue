@@ -41,7 +41,7 @@ const runTask2 = () => {
 }
 
 // =================================================================
-// 📝 [과제 3] 서버 연쇄 데이터 요청 및 에러 통합 제어 (Async/Await)
+// [과제 3] 서버 연쇄 데이터 요청 및 에러 통합 제어 (Async/Await)
 // =================================================================
 // 가상의 백엔드 API (수정 금지 - Promise 반환형 화살표 함수)
 const fetchUserId = () => new Promise((res) => setTimeout(() => res({ uid: 777 }), 400))
@@ -68,7 +68,7 @@ const runTask3 = async () => {
 
 <template>
   <div class="practice-section">
-    <h2>🎯 Modern JavaScript (ES6+) 실무 검증 과제룸</h2>
+    <h2>Modern JavaScript (ES6+) 실무 검증 과제룸</h2>
 
     <div class="card">
       <h3>과제 1. 데이터 추출 및 포맷팅</h3>

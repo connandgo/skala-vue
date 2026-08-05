@@ -51,7 +51,7 @@ const nextPop = computed(() => (props.forecast.length ? props.forecast[0].pop : 
 /**
  * 24시간 최저/최고 기온
  *
- * ⚠️ OpenWeather 현재날씨의 temp_min/temp_max는 "하루 최저/최고"가 아니다.
+ * OpenWeather 현재날씨의 temp_min/temp_max는 "하루 최저/최고"가 아니다.
  *    같은 시각 도시 영역 안 관측소들의 편차라서, 관측소가 하나인 국내 도시는
  *    temp와 항상 같은 값이 나온다. 그래서 예보(3시간 간격)로 직접 계산한다.
  */

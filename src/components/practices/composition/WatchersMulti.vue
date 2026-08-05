@@ -5,13 +5,13 @@ const city = ref('서울')
 const dateType = ref('오늘')
 const apiStatus = ref('대기 중...')
 
-// 🟢 두 개의 ref 변수를 배열[] 형태로 묶어 동시에 감시합니다.
+// 두 개의 ref 변수를 배열[] 형태로 묶어 동시에 감시합니다.
 watch([city, dateType], ([newCity, newDate], [oldCity, oldDate]) => {
   // 새 값과 옛 값도 상단에 적어준 [city, dateType] 순서대로 매핑되어 들어옵니다.
-  apiStatus.value = `[변경 감지] ${oldCity}(${oldDate}) ➡️ ${newCity}(${newDate})`
+  apiStatus.value = `[변경 감지] ${oldCity}(${oldDate}) ${newCity}(${newDate})`
 
-  // 💡 실무 활용: 두 옵션 중 하나만 바뀌어도 통합 API 요청을 보냅니다.
-  console.log(`🤖 [통합 API 호출] ${newCity}의 ${newDate} 날씨를 불러옵니다...`)
+  // 실무 활용: 두 옵션 중 하나만 바뀌어도 통합 API 요청을 보냅니다.
+  console.log(`[통합 API 호출] ${newCity}의 ${newDate} 날씨를 불러옵니다...`)
 })
 </script>
 

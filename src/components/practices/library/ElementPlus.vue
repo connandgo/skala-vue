@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // ==========================================
@@ -12,14 +12,14 @@ const userForm = ref({
 
 const handleRegister = () => {
   if (!userForm.value.email.includes('@')) {
-    ElMessage.error('❌ 올바른 이메일 형식이 아닙니다.')
+    ElMessage.error('올바른 이메일 형식이 아닙니다.')
     return
   }
   if (!userForm.value.agree) {
-    ElMessage.warning('⚠️ 이용약관에 동의하셔야 합니다.')
+    ElMessage.warning('이용약관에 동의하셔야 합니다.')
     return
   }
-  ElMessage.success('🎉 가입 신청이 정상적으로 완료되었습니다!')
+  ElMessage.success('가입 신청이 정상적으로 완료되었습니다!')
 }
 
 // ==========================================
@@ -36,42 +36,54 @@ const isDownloading = ref(false)
 
 // 파일 삭제 확인창 예시 (ElMessageBox)
 const confirmDelete = () => {
-  ElMessageBox.confirm('서버에서 해당 파일을 영구히 삭제하시겠습니까?', '🔥 최종 경고', {
+  ElMessageBox.confirm('서버에서 해당 파일을 영구히 삭제하시겠습니까?', '최종 경고', {
     confirmButtonText: '네, 삭제합니다',
     cancelButtonText: '취소',
     type: 'danger',
   })
     .then(() => {
-      ElMessage.success('🗑️ 파일이 안전하게 파쇄되었습니다.')
+      ElMessage.success('파일이 안전하게 파쇄되었습니다.')
     })
     .catch(() => {
-      ElMessage.info('❌ 삭제 작업이 취소되었습니다.')
+      ElMessage.info('삭제 작업이 취소되었습니다.')
     })
 }
 
 // 게이지 바 애니메이션 가동
+let timer = null
+
 const startDownload = () => {
-  if (isDownloading.value) return (isDownloading.value = true)
+  // 교안 코드는 `return (isDownloading.value = true)` 로 되어 있는데,
+  //    이러면 진행 중 여부가 영영 true가 되지 않아 클릭할 때마다 타이머가 쌓인다.
+  //    (진행률이 20씩이 아니라 40, 60씩 뛰는 원인)
+  if (isDownloading.value) return
+  isDownloading.value = true
   downloadProgress.value = 0
 
-  const interval = setInterval(() => {
+  timer = setInterval(() => {
     downloadProgress.value += 20
     if (downloadProgress.value >= 100) {
-      clearInterval(interval)
+      clearInterval(timer)
+      timer = null
       isDownloading.value = false
-      ElMessage.success('💾 대용량 데이터 로드가 완료되었습니다!')
+      ElMessage.success('대용량 데이터 로드가 완료되었습니다!')
     }
   }, 400)
 }
+
+// 진행 중에 다른 탭으로 이동하면 타이머만 남는다. 반드시 정리한다.
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <template>
   <div class="practice-section">
-    <h2>🧪 Element Plus 활용 실습</h2>
+    <h2>Element Plus 활용 실습</h2>
     <p class="subtitle">외부 API와 무관하게 템플릿과 상태값 변동만을 관측하는 샘플입니다.</p>
 
     <el-card class="box-card">
-      <template #header><strong>📝 실습 1. 회원가입 Form & 인풋 제어</strong></template>
+      <template #header><strong>실습 1. 회원가입 Form & 인풋 제어</strong></template>
       <div class="card-body">
         <div class="input-group">
           <span>이메일 주소:</span>
@@ -82,12 +94,12 @@ const startDownload = () => {
           <el-switch v-model="userForm.agree" active-text="개인정보 수집 및 필수 이용약관에 동의합니다." />
         </div>
 
-        <el-button type="success" @click="handleRegister">🚀 회원가입하기</el-button>
+        <el-button type="success" @click="handleRegister">회원가입하기</el-button>
       </div>
     </el-card>
 
     <el-card class="box-card">
-      <template #header><strong>🛒 실습 2. 커머스 상품 수량 및 평점 시스템</strong></template>
+      <template #header><strong>실습 2. 커머스 상품 수량 및 평점 시스템</strong></template>
       <div class="card-body">
         <div class="input-group">
           <span>구매 수량 선택:</span>
@@ -100,18 +112,18 @@ const startDownload = () => {
           <el-rate v-model="productRate" show-score score-template="{value} 점" />
         </div>
 
-        <div class="result-preview">🟢 <strong>실시간 장부 요약:</strong> 선택 수량 {{ productQuantity }}개 / 내가 준 점수 {{ productRate }}점</div>
+        <div class="result-preview"><strong>실시간 장부 요약:</strong> 선택 수량 {{ productQuantity }}개 / 내가 준 점수 {{ productRate }}점</div>
       </div>
     </el-card>
 
     <el-card class="box-card">
-      <template #header><strong>⚙️ 실습 3. 시스템 피드백 & 프로그레스 인터랙션</strong></template>
+      <template #header><strong>실습 3. 시스템 피드백 & 프로그레스 인터랙션</strong></template>
       <div class="card-body">
         <div class="btn-zone">
-          <el-button type="danger" plain @click="confirmDelete">🗑️ 서버 파일 삭제 테스트</el-button>
+          <el-button type="danger" plain @click="confirmDelete">서버 파일 삭제 테스트</el-button>
 
           <el-button type="primary" :loading="isDownloading" @click="startDownload">
-            {{ isDownloading ? '동기화 중...' : '💾 데이터 동기화 시작' }}
+            {{ isDownloading ? '동기화 중...' : '데이터 동기화 시작' }}
           </el-button>
         </div>
 

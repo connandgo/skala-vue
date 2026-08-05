@@ -6,13 +6,13 @@ const dummy = ref(0) // computed와 무관한 변수
 
 // 1. 일반 함수: 화면이 조금이라도 리렌더링되면 무조건 재실행
 const getMethodResult = () => {
-  console.log('❌ 일반 함수 실행됨!')
+  console.log('일반 함수 실행됨!')
   return count.value * 2
 }
 
 // 2. Computed: count가 바뀔 때만 재연산 (dummy가 바뀔 땐 이전 값 재사용)
 const doubleCount = computed(() => {
-  console.log('✅ Computed 연산 실행됨!')
+  console.log('Computed 연산 실행됨!')
   return count.value * 2
 })
 </script>

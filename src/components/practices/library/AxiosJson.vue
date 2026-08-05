@@ -2,10 +2,10 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-// 💡 1. 백엔드 공용 주소
+// 1. 백엔드 공용 주소
 const BASE_URL = 'https://jsonplaceholder.typicode.com/posts'
 
-// 💡 2. 반응형 상태 데이터
+// 2. 반응형 상태 데이터
 const items = ref([]) // 서버에서 받아온 데이터 배열 박스
 const textInput = ref('') // 입력창과 연결된 글자 데이터 박스
 
@@ -49,7 +49,7 @@ const handleCreate = async () => {
 // ----------------------------------------------------
 const handleUpdate = async (id) => {
   try {
-    const editPayload = { title: '✨ 변조된 타이틀 데이터', body: '수정 완료', userId: 1 }
+    const editPayload = { title: '변조된 타이틀 데이터', body: '수정 완료', userId: 1 }
 
     // PUT 함수 구조: (특정방주소, 교체할데이터)
     const response = await axios.put(`${BASE_URL}/${id}`, editPayload)
@@ -81,7 +81,7 @@ const handleDelete = async (id) => {
   }
 }
 
-// 💡 3. 컴포넌트가 켜지자마자 자동으로 GET 호출
+// 3. 컴포넌트가 켜지자마자 자동으로 GET 호출
 onMounted(() => {
   handleRead()
 })
@@ -89,7 +89,7 @@ onMounted(() => {
 
 <template>
   <div class="practice-section">
-    <h2>⚡ Axios CRUD 프로토타입 훈련</h2>
+    <h2>Axios CRUD 프로토타입 훈련</h2>
 
     <div class="input-zone">
       <input v-model="textInput" placeholder="저장할 텍스트를 입력하세요" />

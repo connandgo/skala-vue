@@ -115,7 +115,7 @@ watch(() => [props.cityItems, props.selectedId], renderMarkers, { deep: true })
 // 단위 전환 시 마커 라벨을 다시 그린다
 watch(() => configStore.unit, renderMarkers)
 
-// ⚠️ 컴포넌트가 사라질 때 지도와 감시자를 반드시 정리한다 (메모리 누수 방지)
+// 컴포넌트가 사라질 때 지도와 감시자를 반드시 정리한다 (메모리 누수 방지)
 onUnmounted(() => {
   themeObserver?.disconnect()
   if (map) {
