@@ -20,6 +20,8 @@ const PX = 4 // 도트 한 칸 크기
 const DARK = '#1f1f1f'
 const LIGHT = '#ffffff'
 const GAIN = 1.15 // 사진 대비
+const SHARPEN = 2.2 // 구름 윤곽 강조 세기 (0이면 원본 그대로)
+const SHARPEN_RADIUS = 2
 const SRC = `${import.meta.env.BASE_URL}sky.jpg`
 
 const DURATION = 3000 // 애니메이션 길이(ms)
@@ -72,17 +74,68 @@ const buildTarget = () => {
   octx.drawImage(image, (cols - dw) / 2, (rows - dh) / 2, dw, dh)
 
   const data = octx.getImageData(0, 0, cols, rows).data
-  target = new Uint8Array(cols * rows)
 
+  // 밝기만 뽑아 둔다
+  const lum = new Float32Array(cols * rows)
+  for (let i = 0; i < lum.length; i++) {
+    const p = i * 4
+    lum[i] = (data[p] * 0.299 + data[p + 1] * 0.587 + data[p + 2] * 0.114) / 255
+  }
+
+  // 언샵 마스크: 흐린 버전을 빼서 구름 윤곽을 도드라지게 한다.
+  // 이 처리가 없으면 농담만 남아 구름 경계가 뭉개져 보인다.
+  const sharpened = unsharpMask(lum, cols, rows, SHARPEN_RADIUS, SHARPEN)
+
+  target = new Uint8Array(cols * rows)
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
-      const i = (y * cols + x) * 4
-      let v = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255
-      v = (v - 0.5) * GAIN + 0.5
+      const idx = y * cols + x
+      let v = (sharpened[idx] - 0.5) * GAIN + 0.5
       // 밝기가 이 칸의 임계값을 넘으면 밝은 픽셀
-      target[y * cols + x] = v > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
+      target[idx] = v > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
     }
   }
+}
+
+/** 가로/세로로 나눠 처리하는 박스 블러 (한 번에 훑어 빠르다) */
+const boxBlur = (src, cw, ch, radius) => {
+  const tmp = new Float32Array(src.length)
+  const out = new Float32Array(src.length)
+  const span = radius * 2 + 1
+
+  for (let y = 0; y < ch; y++) {
+    for (let x = 0; x < cw; x++) {
+      let sum = 0
+      for (let d = -radius; d <= radius; d++) {
+        const nx = Math.min(cw - 1, Math.max(0, x + d))
+        sum += src[y * cw + nx]
+      }
+      tmp[y * cw + x] = sum / span
+    }
+  }
+  for (let y = 0; y < ch; y++) {
+    for (let x = 0; x < cw; x++) {
+      let sum = 0
+      for (let d = -radius; d <= radius; d++) {
+        const ny = Math.min(ch - 1, Math.max(0, y + d))
+        sum += tmp[ny * cw + x]
+      }
+      out[y * cw + x] = sum / span
+    }
+  }
+  return out
+}
+
+/** 원본에서 흐린 버전을 뺀 차이를 되더해 가장자리를 세운다 */
+const unsharpMask = (src, cw, ch, radius, amount) => {
+  if (amount <= 0) return src
+  const blurred = boxBlur(src, cw, ch, radius)
+  const out = new Float32Array(src.length)
+  for (let i = 0; i < src.length; i++) {
+    const v = src[i] + amount * (src[i] - blurred[i])
+    out[i] = v < 0 ? 0 : v > 1 ? 1 : v
+  }
+  return out
 }
 
 /* ---------------------------------------------------------------- 규칙 */
