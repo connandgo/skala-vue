@@ -41,7 +41,9 @@ jobs:
         run: npm run news
 
       - name: 빌드
-        # API 키는 저장소 Secrets에서 주입한다 (소스에는 남지 않는다)
+        # API 키는 저장소 Secrets에서 주입한다. 저장소 소스에는 남지 않는다.
+        # 다만 VITE_ 값은 빌드 때 번들에 문자열로 박히므로 배포된 JS에서는 읽힌다.
+        # 정적 사이트에서는 피할 수 없다. 그래서 사용량이 제한된 데모용 키만 넣는다.
         env:
           VITE_KOFIC_API_KEY: ${{ secrets.VITE_KOFIC_API_KEY }}
           VITE_TMDB_TOKEN: ${{ secrets.VITE_TMDB_TOKEN }}
