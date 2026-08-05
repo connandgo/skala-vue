@@ -423,6 +423,7 @@ const BAYER8 = [
 
 const canvasRef = ref(null)
 const route = useRoute()
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 let image = null
 let ctx = null
