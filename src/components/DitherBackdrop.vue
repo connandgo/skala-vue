@@ -72,8 +72,8 @@ const SHAPES = {
     }
   },
 
-  // 코드 챌린지 - 중괄호를 좌우 끝으로 벌린다
-  challenges: (ctx, c, r) => {
+  // 디자인 이펙트 - 중괄호를 좌우 끝으로 벌린다
+  effects: (ctx, c, r) => {
     ctx.fillStyle = tone(FG_TONE)
     ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
     ctx.textBaseline = 'middle'
@@ -92,8 +92,11 @@ const SHAPES = {
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'left'
     ctx.fillText('>', c * -0.015, r * 0.5)
-    ctx.textAlign = 'right'
-    ctx.fillText('_', c * 1.015, r * 0.5)
+
+    // 커서. '_' 글자는 글자 박스 바닥에 붙어 힘없이 보여서 사각형으로 그린다.
+    const cw = r * 0.17
+    const ch = r * 0.34
+    ctx.fillRect(c - cw * 0.72, (r - ch) / 2, cw, ch)
   },
 }
 
@@ -105,7 +108,7 @@ const tone = (v) => {
 
 const resolveShape = (path) => {
   if (path.startsWith('/movies')) return SHAPES.movies
-  if (path.startsWith('/challenges')) return SHAPES.challenges
+  if (path.startsWith('/effects')) return SHAPES.effects
   if (path === '/') return SHAPES.about // 메인(소개)
   return null // 날씨 페이지는 구름 사진
 }

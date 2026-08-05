@@ -28,10 +28,10 @@ const routes = [
     component: () => import('@/views/WeatherDetailView.vue'),
   },
   {
-    // 교안 코드 챌린지 모음 (Vue 문법 / Composition API / Component / Library)
-    path: '/challenges',
-    name: 'Challenges',
-    component: () => import('@/views/ChallengeView.vue'),
+    // 프론트엔드 디자인 이펙트 카탈로그
+    path: '/effects',
+    name: 'Effects',
+    component: () => import('@/views/EffectsView.vue'),
   },
   {
     // 영화진흥위원회 박스오피스
