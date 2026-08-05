@@ -15,7 +15,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 const emit = defineEmits(['done'])
 
 const PX = 5 // 도트 한 칸 크기
-const SCROLL = 1300 // 코드가 올라가는 시간(ms)
+const SCROLL = 1600 // 덤프가 한 줄씩 찍히는 시간(ms)
 const ASSEMBLE = 1500 // SKALA로 모이는 시간(ms)
 const HOLD = 600 // 완성 후 머무는 시간(ms)
 const FADE = 600 // 사라지는 시간(ms)
@@ -148,8 +148,11 @@ const applyLock = (progress) => {
 
 const LINE_H = 18
 
-/** 1단계: 코드가 위로 흐르는 화면 */
-const renderCode = (offset, alpha = 1) => {
+/**
+ * 1단계: 화면은 고정한 채 위에서부터 한 줄씩 찍힌다.
+ * 스크롤로 흘려보내면 글자가 읽히지 않아, 콘솔이 출력하듯 쌓아 올린다.
+ */
+const renderCode = (count, alpha = 1) => {
   ctx.fillStyle = BG
   ctx.fillRect(0, 0, w, h)
 
@@ -157,24 +160,22 @@ const renderCode = (offset, alpha = 1) => {
   ctx.textBaseline = 'top'
   ctx.globalAlpha = alpha
 
-  const visibleCount = Math.ceil(h / LINE_H) + 2
-  for (let i = 0; i < visibleCount; i++) {
-    const line = lines[i % lines.length]
-    if (!line) continue
-    // 최근 줄일수록 밝게 (터미널에서 방금 출력된 느낌)
-    ctx.fillStyle = i > visibleCount - 6 ? CODE : CODE_DIM
-    ctx.fillText(line, 28, h - offset - i * LINE_H)
+  const shown = Math.min(count, lines.length)
+  for (let i = 0; i < shown; i++) {
+    // 마지막 몇 줄은 방금 찍힌 것처럼 밝게
+    ctx.fillStyle = i > shown - 4 ? CODE : CODE_DIM
+    ctx.fillText(lines[i], 28, 24 + i * LINE_H)
   }
   ctx.globalAlpha = 1
 }
 
 /** 2단계: 점이 SKALA로 모이는 화면 */
-const renderDots = (codeAlpha, offset) => {
+const renderDots = (codeAlpha, count) => {
   ctx.fillStyle = BG
   ctx.fillRect(0, 0, w, h)
 
   // 남은 코드가 옅게 비친다
-  if (codeAlpha > 0.01) renderCode(offset, codeAlpha * 0.5)
+  if (codeAlpha > 0.01) renderCode(count, codeAlpha * 0.5)
 
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -244,11 +245,8 @@ const run = () => {
     }
 
     if (elapsed < SCROLL) {
-      // 1단계: 코드가 빠르게 위로 흐른다
-      const offset = (elapsed / SCROLL) * h * 2.2
-      // 줄이 다 지나가면 새 줄로 갈아 끼워 끝없이 흐르게 한다
-      if (Math.random() < 0.35) lines[rand(lines.length)] = makeLine()
-      renderCode(offset)
+      // 1단계: 위에서부터 한 줄씩 쌓인다 (화면은 고정)
+      renderCode(Math.ceil((elapsed / SCROLL) * lines.length))
     } else {
       // 2단계: 글자가 점으로 무너지고 SKALA로 모인다
       if (!seeded) {
@@ -263,7 +261,7 @@ const run = () => {
         step()
         applyLock(t * t) // 처음엔 천천히, 뒤로 갈수록 빠르게 모인다
       }
-      renderDots(Math.max(0, 1 - t * 2.5), h * 2.2)
+      renderDots(Math.max(0, 1 - t * 2.5), lines.length)
     }
 
     raf = requestAnimationFrame(loop)
