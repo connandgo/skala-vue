@@ -144,6 +144,8 @@ let lockMap = new Uint8Array(0)
 let lockOrder = new Float32Array(0)
 let target = new Uint8Array(0)
 let edgeMap = new Uint8Array(0)
+// 지금까지 드러난 비율. 윤곽선도 이 값에 맞춰 서서히 나타난다.
+let revealed = 0
 
 let raf = null
 let resizeTimer = null
@@ -319,6 +321,7 @@ const step = () => {
  * 흩뿌려지듯 채워진다.
  */
 const applyLock = (progress) => {
+  revealed = progress
   for (let i = 0; i < target.length; i++) {
     if (target[i] === 1 && lockOrder[i] < progress) {
       lockMap[i] = 1
@@ -342,7 +345,9 @@ const render = () => {
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const idx = y * cols + x
-      if (edgeMap[idx] && !(lockMap[idx] || grid[idx])) {
+      // 윤곽선을 처음부터 다 그리면 형태가 미리 드러난다.
+      // 밝은 점과 같은 순서로 서서히 나타나게 한다.
+      if (edgeMap[idx] && lockOrder[idx] < revealed && !(lockMap[idx] || grid[idx])) {
         ctx.fillRect(x * PX, y * PX, PX, PX)
       }
     }
@@ -397,6 +402,7 @@ const start = () => {
   lockMap = new Uint8Array(cols * rows)
   lockOrder = new Float32Array(cols * rows)
   for (let i = 0; i < lockOrder.length; i++) lockOrder[i] = Math.random()
+  revealed = 0
 
   buildTarget()
 
