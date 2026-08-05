@@ -422,7 +422,17 @@ const BAYER8 = [
 ]
 
 const canvasRef = ref(null)
+const lensRef = ref(null)
 const route = useRoute()
+
+/* ================================================================
+   커서 돋보기
+   배경이 도트라서, 그 도트를 그대로 확대하면 인쇄물을 확대경으로
+   들여다보는 느낌이 난다. 배경 캔버스 위에 겹쳐 그린다.
+   ================================================================ */
+const LENS_R = 96 // 반지름(px)
+const LENS_ZOOM = 2.6 // 확대 배율
+const LENS_EASE = 0.18 // 커서를 따라가는 부드러움 (1이면 즉시)
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 let image = null
@@ -688,6 +698,98 @@ const stop = () => {
 }
 
 /** 정지 시점에는 사진과 정확히 일치시킨다 (라이프 잔해 제거) */
+/* ---------------------------------------------------------------- 돋보기 */
+
+let lensCtx = null
+let lensRaf = null
+// 실제 커서 위치와, 화면에 그려지는 위치를 나눠 둔다 (뒤쫓아 가며 부드러워진다)
+let pointer = { x: -1, y: -1 }
+let lensPos = { x: -1, y: -1 }
+let lensAlive = false
+
+/** 격자 한 칸의 색을 정한다 (render와 같은 규칙) */
+const cellColor = (idx, gy) => {
+  if (lockMap[idx] || grid[idx]) return LIGHT
+  if (edgeMap[idx] && lockOrder[idx] < revealed) return EDGE
+  // 바탕 그라디언트를 세로 위치로 근사한다
+  const t = gy / rows
+  const mix = (a, b) => Math.round(a + (b - a) * t)
+  const top = [0x8a, 0x8a, 0x8a]
+  const bot = [0x56, 0x56, 0x56]
+  return `rgb(${mix(top[0], bot[0])},${mix(top[1], bot[1])},${mix(top[2], bot[2])})`
+}
+
+const drawLens = () => {
+  if (!lensCtx) return
+  lensCtx.clearRect(0, 0, w, h)
+
+  const { x: cx, y: cy } = lensPos
+  if (cx < 0) return
+
+  lensCtx.save()
+  lensCtx.beginPath()
+  lensCtx.arc(cx, cy, LENS_R, 0, Math.PI * 2)
+  lensCtx.clip()
+
+  // 확대된 칸 크기. 원 안을 이 크기로 훑으며 원본 격자에서 값을 가져온다.
+  const cell = PX * LENS_ZOOM
+  const start = -Math.ceil(LENS_R / cell)
+  const end = -start
+
+  for (let j = start; j <= end; j++) {
+    for (let i = start; i <= end; i++) {
+      const px = cx + i * cell
+      const py = cy + j * cell
+
+      // 확대 전 좌표로 되돌려 원본 격자 위치를 찾는다
+      const gx = Math.floor((cx + (px - cx) / LENS_ZOOM) / PX)
+      const gy = Math.floor((cy + (py - cy) / LENS_ZOOM) / PX)
+      if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue
+
+      lensCtx.fillStyle = cellColor(gy * cols + gx, gy)
+      lensCtx.fillRect(px, py, cell + 1, cell + 1)
+    }
+  }
+  lensCtx.restore()
+
+  // 유리 테두리
+  lensCtx.strokeStyle = 'rgba(255,255,255,0.55)'
+  lensCtx.lineWidth = 2
+  lensCtx.beginPath()
+  lensCtx.arc(cx, cy, LENS_R, 0, Math.PI * 2)
+  lensCtx.stroke()
+}
+
+const lensLoop = () => {
+  // 커서를 곧장 따라가면 뻣뻣하다. 거리의 일부만 좁히며 뒤쫓는다.
+  lensPos.x += (pointer.x - lensPos.x) * LENS_EASE
+  lensPos.y += (pointer.y - lensPos.y) * LENS_EASE
+  drawLens()
+  lensRaf = requestAnimationFrame(lensLoop)
+}
+
+const onPointerMove = (e) => {
+  pointer.x = e.clientX
+  pointer.y = e.clientY
+  if (lensPos.x < 0) lensPos = { x: pointer.x, y: pointer.y } // 첫 등장은 튀지 않게
+  if (!lensAlive) {
+    lensAlive = true
+    lensRaf = requestAnimationFrame(lensLoop)
+  }
+}
+
+const onPointerLeave = () => {
+  pointer = { x: -1, y: -1 }
+  lensPos = { x: -1, y: -1 }
+  drawLens()
+}
+
+const stopLens = () => {
+  if (lensRaf) cancelAnimationFrame(lensRaf)
+  lensRaf = null
+  lensAlive = false
+}
+
 const settle = () => {
   applyLock(1)
   grid.set(target)
@@ -707,6 +809,14 @@ const start = () => {
   canvas.height = Math.floor(h * dpr)
   ctx = canvas.getContext('2d')
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+  // 돋보기도 같은 크기·배율로 맞춘다
+  if (lensRef.value) {
+    lensRef.value.width = canvas.width
+    lensRef.value.height = canvas.height
+    lensCtx = lensRef.value.getContext('2d')
+    lensCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  }
 
   cols = Math.ceil(w / PX)
   rows = Math.ceil(h / PX)
@@ -761,7 +871,10 @@ const onResize = () => {
 }
 
 const onVisibility = () => {
-  if (document.hidden) settle()
+  if (document.hidden) {
+    settle()
+    stopLens()
+  }
 }
 
 onMounted(() => {
@@ -774,6 +887,14 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
   document.addEventListener('visibilitychange', onVisibility)
 
+  // 돋보기. 손가락으로 쓰는 기기에는 커서가 없고,
+  // 모션을 줄이도록 설정한 사용자에게도 붙이지 않는다.
+  const hasPointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  if (hasPointer && !reduceMotion) {
+    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    document.addEventListener('pointerleave', onPointerLeave)
+  }
+
   // 라우트가 바뀌면 그림을 새로 만들고 애니메이션을 다시 돌린다
   watch(() => route.path, start)
 })
@@ -783,6 +904,9 @@ onUnmounted(() => {
   clearTimeout(resizeTimer)
   window.removeEventListener('resize', onResize)
   document.removeEventListener('visibilitychange', onVisibility)
+  window.removeEventListener('pointermove', onPointerMove)
+  document.removeEventListener('pointerleave', onPointerLeave)
+  stopLens()
   if (image) image.onload = null
 })
 </script>
@@ -790,6 +914,8 @@ onUnmounted(() => {
 <template>
   <div class="shader-bg" aria-hidden="true">
     <canvas ref="canvasRef"></canvas>
+    <!-- 커서를 따라다니는 돋보기. 배경 위에만 그려져 본문을 가리지 않는다. -->
+    <canvas ref="lensRef" class="lens"></canvas>
   </div>
 </template>
 
@@ -805,5 +931,10 @@ onUnmounted(() => {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.lens {
+  position: absolute;
+  inset: 0;
 }
 </style>
