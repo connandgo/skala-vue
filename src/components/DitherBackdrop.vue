@@ -108,11 +108,13 @@ const resolveShape = (path) => {
 
 // 등장 연출. false로 두면 애니메이션 없이 그림만 바로 나온다.
 const ANIMATE = true
-const DURATION = 1800 // 애니메이션 길이(ms)
+const DURATION = 2200 // 애니메이션 길이(ms)
 // 세대 간격(ms). 짧을수록 점들이 빠르게 꿈틀거려 산만해진다.
 const TICK = 220
-// 초기 노이즈 밀도. 높으면 화면 전체가 지글거려 눈이 피로하다.
-const SEED_DENSITY = 0.07
+// 초기 노이즈 밀도.
+// 배경 점 밀도와 비슷하게 채워야 처음엔 '균일한 결'로만 보이고 형태가 드러나지 않는다.
+// 라이프 규칙이 몇 세대 만에 이 노이즈를 알아서 솎아낸다.
+const SEED_DENSITY = 0.42
 
 // 8x8 Bayer 행렬 - 밝기를 점의 밀도로 바꾸는 임계값 표
 const BAYER8 = [
@@ -358,9 +360,9 @@ const render = () => {
   }
 }
 
-// 초반에 빠르게 채워지고 끝에서 부드럽게 멎는다.
-// 가운데가 느린 곡선(easeInOut)을 쓰면 노이즈만 오래 보여 조잡해진다.
-const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3)
+// 처음엔 거의 잠기지 않다가 중반부터 빠르게 채워진다.
+// 초반에 바로 채우면 형태가 처음부터 드러나 '이미 정해진 그림'처럼 보인다.
+const easeInOutCubic = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2)
 
 const stop = () => {
   if (raf) cancelAnimationFrame(raf)
@@ -420,7 +422,7 @@ const start = () => {
     if (now - lastTick >= TICK) {
       lastTick = now
       step()
-      applyLock(easeOutCubic(elapsed / DURATION))
+      applyLock(easeInOutCubic(elapsed / DURATION))
       render()
     }
     raf = requestAnimationFrame(loop)
