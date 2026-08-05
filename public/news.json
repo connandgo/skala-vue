@@ -1,19 +1,47 @@
 {
-  "fetchedAt": "2026-08-05T07:28:42.485Z",
+  "fetchedAt": "2026-08-05T07:32:05.294Z",
   "daily": [
+    {
+      "id": "고령군평생교육지도자협의회,AI활용역량강화교육",
+      "title": "고령군 평생교육지도자협의회, AI 활용 역량강화 교육",
+      "source": "경상매일신문",
+      "url": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE9NRURNbGlMT1dXUE5EaGVoY2xfT0NESzltMFBLMExHVEZmUHA2aU9vaURvUy1tU2Q1MmVvdHRsVlRSZC1PZlFtQTVGSEhNVGtoMmEzcFd6MXBpbzZNSWp3?oc=5",
+      "published": "2026-08-05T07:26:00.000Z"
+    },
+    {
+      "id": "성신여대,대학생청소년AI교육지원사업선정",
+      "title": "성신여대, 대학생 청소년 AI 교육지원사업 선정",
+      "source": "한국대학신문",
+      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE1SQ0VkWTcxeE10aFZrNUlmbHhfLW91dXNtaDMxTVA5Unk1TmI1ZGJIbjhzeUdsT2d5VUtjdTdzNTJfOG8xV1JqX0hUZk5lZzQzNENDMHd2RXFTWGJIM3ZQNXMxS2I4QQ?oc=5",
+      "published": "2026-08-05T07:25:00.000Z"
+    },
+    {
+      "id": "충북도,AI복지행정본격추진인공지능기반서비스혁신",
+      "title": "충북도, AI 복지행정 본격 추진 인공지능 기반 서비스 혁신",
+      "source": "welfarenews.net",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFBTOVVmeWQzcHFWR09rbUViMi1mcjJEYnZ3b1I1NHc1a290RUtNakx2T2JaODdSVUxRNFpCOTdiWFVacFRGZm1GTHZ4VHpqWHR3VFZmZ2JIS09WOS1nV1N5MFdmbTBrNGl6eVNWWkk0Yw?oc=5",
+      "published": "2026-08-05T07:23:05.000Z"
+    },
+    {
+      "id": "국민연금,인공지능활용기초연금국민참여홍보콘텐츠공모전개최",
+      "title": "국민연금, 인공지능 활용 기초연금 국민 참여 홍보 콘텐츠 공모전 개최",
+      "source": "전북도민일보",
+      "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxONGlrbVVRZUdHSmpPeV9jTG5JelNKNnZGU1FkclJFakR0VkxRZUdWZ294UDNmLVIwb3ZUU0FXakE0dzZWc2MtSWU3alVPU0lEeVByTVhfQk8wRXV6MGtack05MmVLMW9PQnNXUTNhcjlVT3BEQTJndmdLN2pVbWpMZ0xvR1M0QQ?oc=5",
+      "published": "2026-08-05T07:21:06.000Z"
+    },
+    {
+      "id": "[단독]정부,인공지능격차해소특위신설...中企에AI인프라개방한다",
+      "title": "[단독]정부, 인공지능 격차해소 특위 신설...中企에 AI 인프라 개방한다",
+      "source": "v.daum.net",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE1Jemh4cnJEdmRaQ0lBdXBVT1FPN2tFT1NvZjhLYUU4bUJEZmE4U1ZoMWZ5clFSWUNIdHo5OUhDSmM2M0V0NUZvVkxFaHhtdjQ?oc=5",
+      "published": "2026-08-05T07:19:00.000Z"
+    },
     {
       "id": "[중국증시마감]'AI응용∙반도체'쌍끌이,커촹50지수4.78%급등",
       "title": "[중국증시 마감] 'AI응용∙반도체' 쌍끌이, 커촹50지수 4.78% 급등",
       "source": "뉴스핌",
       "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTFBIelpHRWJhUjIxRDZHMXRmTWVBT01iSjJNaU10SU5TYnVfVzItTnlRcjkxV3pNcXNTUm9TVUMwNnJ2cXJxd1RpRHZFZkhHTnZqN1dlUzRzOEpSY29r?oc=5",
       "published": "2026-08-05T07:19:00.000Z"
-    },
-    {
-      "id": "[단독]정부,인공지능격차해소특위신설...中企에AI인프라개방한다",
-      "title": "[단독]정부, 인공지능 격차해소 특위 신설...中企에 AI 인프라 개방한다",
-      "source": "MTN 머니투데이방송",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE84cDhmVFF5eUtiOFAxNGxWdXdyWGhWRlpoNld1b3pHZU5TQ2oxTE81aWEyY1hYcmVLSnIzUjMzbUpIaC0xdE9ncFJNMHFmelRzaTNDdUhWeklsT1ZsN0NiQnMweVU?oc=5",
-      "published": "2026-08-05T07:18:51.000Z"
     },
     {
       "id": "탑코미디어,`엔키AX`로사명변경추진…AI사업4개추가",
@@ -61,7 +89,7 @@
       "id": "과기정통부,국산AI반도체사업합동착수보고회개최",
       "title": "과기정통부, 국산 AI 반도체 사업 합동 착수보고회 개최",
       "source": "네이트",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE91VHRVTDQ1WWFIS3BVbkJWcjR1WV9mRHlMbWp3TlY0bkdtWk85SDZLQ2pQVE9KTHZTS0pmQWo5TmtsRlVuLV9XVE4xaEVxbGlSVHR1Q3A1eVNfZzRkSjBJWA?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9rblFKNjhrTDljQlF3cms0b21xZHN0enRwYW0xaFc3Y09SbjNmV2g3UjFtMDFfREtvNkt2U0VjMHRNLW9uQ2Fpd2ZMeVktdE9iT2p1aklGUUd6WVBuSDNMcw?oc=5",
       "published": "2026-08-05T07:12:00.000Z"
     },
     {
@@ -70,6 +98,13 @@
       "source": "에너지경제신문",
       "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE9LTUhpR1doTXZGbVhkOHlhQk83NFNldTVkUWdUY0JCN1I4ZlBTVDVnRmVZVXdpdTZaa29oV0NvUzQySW1qU2MtOFJTZktvNkZRTlY1dFZRQVZTbXZNM2pwenhXZw?oc=5",
       "published": "2026-08-05T07:11:28.000Z"
+    },
+    {
+      "id": "악성코드심으려가짜신원까지만들었다…AI의섬뜩한일탈",
+      "title": "악성코드 심으려 가짜 신원까지 만들었다…AI의 섬뜩한 일탈",
+      "source": "조세일보",
+      "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE9Sc0ZISTFLMHdrTHMtaXhROW5Gck55N3EyVEZpbXJpNTNVSmFOX2VIb183bGtlWlZPd1N0NWRGRkZWUnAyUGRvalo3OF9WdllxRzBqbzVNLWlCTVlUWXBabTd0bEpFZEFDYnVyOEFSbkJjb25s?oc=5",
+      "published": "2026-08-05T07:10:45.000Z"
     },
     {
       "id": "국산NPU로활주로지킨다…공군AI감시체계에딥엑스기술적용",
@@ -84,6 +119,13 @@
       "source": "AI타임스",
       "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE1hd1VEOTltY3l1SDA3UmZjZWxmb3VYaXBqMUM5SG1TOTZrZmtvbGJETDhuTVpmN2JwVnlVeERQMVhRTHZWN2loYVdIS1pyWjNaZTJtQ096bmdxSFFXUkhpVUU0MDVjWkROalE?oc=5",
       "published": "2026-08-05T07:08:02.000Z"
+    },
+    {
+      "id": "“농업에스며드는AI”…경북정보화농업인450명,영남대서‘인공지능농업’선포",
+      "title": "“농업에 스며드는 AI”… 경북 정보화농업인 450명, 영남대서 ‘인공지능 농업’ 선포",
+      "source": "뷰티경제",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBvbnZlQ2szZ0NYR2JueENfNTVtUnlndm5OaWZ1VjlJQnBTZ2hSdlVQaTFPN2tJOFlnOEtXTXJSVkVyaVVEYWp6WWRuXy1SM3kwOGkwMXhyUmhid0R5MXJ1dDRHdnhOUExSWkE?oc=5",
+      "published": "2026-08-05T07:07:48.000Z"
     },
     {
       "id": "경북도,인공지능맞춤형스마트건강관리서비스실증착수",
@@ -142,17 +184,17 @@
       "published": "2026-08-05T07:00:00.000Z"
     },
     {
-      "id": "[人사이트]남진우한양대교수“AI신약병목,K-문샷으로극복해개발속도10배향상”",
-      "title": "[人사이트] 남진우 한양대 교수 “AI 신약 병목, K-문샷으로 극복해 개발 속도 10배 향상”",
-      "source": "전자신문",
-      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTFBGVUFFWXVvVkpNb01xb1B1dVNPU0w4N3B2c0xCNjRoS1NSLTdSSncwT3FKZHlVYTAtelFaOFlFN2dVYXpJZTdyR2p2TjZGdw?oc=5",
-      "published": "2026-08-05T07:00:00.000Z"
-    },
-    {
       "id": "코히어,소버린AI앞세워아태지역공략속도…한국·일본법인지사설립",
       "title": "코히어, 소버린AI 앞세워 아태 지역 공략 속도…한국·일본 법인 지사 설립",
       "source": "테크월드",
       "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE93QXdjWlh2NUlpd0xnZlBkekw3LVJEdVJPVS0zdDY0cTkyMEFja1JRS3FrQ3pkS19TbHBuQ1lYMFJDdWV6R3dXWTFka1RSQW80b3JJd2kzX1ZNQTAzRWlSb2ZKa0NLQktS?oc=5",
+      "published": "2026-08-05T07:00:00.000Z"
+    },
+    {
+      "id": "[人사이트]남진우한양대교수“AI신약병목,K-문샷으로극복해개발속도10배향상”",
+      "title": "[人사이트] 남진우 한양대 교수 “AI 신약 병목, K-문샷으로 극복해 개발 속도 10배 향상”",
+      "source": "전자신문",
+      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTFBGVUFFWXVvVkpNb01xb1B1dVNPU0w4N3B2c0xCNjRoS1NSLTdSSncwT3FKZHlVYTAtelFaOFlFN2dVYXpJZTdyR2p2TjZGdw?oc=5",
       "published": "2026-08-05T07:00:00.000Z"
     },
     {
@@ -163,53 +205,11 @@
       "published": "2026-08-05T06:57:20.000Z"
     },
     {
-      "id": "[단독]플리토,AI통번역단말기사업진출…‘실물AI서비스’도전장",
-      "title": "[단독] 플리토, AI 통번역 단말기 사업 진출…‘실물 AI 서비스’ 도전장",
+      "id": "퓨리오사AI이어리벨리온…아이에이,‘네오큐브’NPU실증확대",
+      "title": "퓨리오사AI 이어 리벨리온…아이에이, ‘네오큐브’ NPU 실증 확대",
       "source": "디지털데일리",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5DY3BxdG5kbXp6NmFWTkRnOHNLY2JRSnR2b0VvN29MRjQ2eldrcV9iNGQ5Z1REXzlIbmQwZzI2T3YybWlER3VMVUI1dFZNZ0pCcHhNbWRuMFR2WExOWnlNUkQ4T0I?oc=5",
-      "published": "2026-08-05T06:55:51.000Z"
-    },
-    {
-      "id": "[일렉스타]디에스,반도체패키징AI검사에서로보틱스까지확장",
-      "title": "[일렉 스타] 디에스, 반도체 패키징 AI 검사에서 로보틱스까지 확장",
-      "source": "디일렉",
-      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE0yQ1hiOTZUMnBwTVUtRjVMNFdVWjBnTElSdW50cDZZSFRTbHpYYzc5d0hKZDA1dVVLdTZ6UERvSF9iQWZGaTR3aG5nX1A4Ym1uNXVXZmN3VTZCQzlVQmo3TzRscU41dw?oc=5",
-      "published": "2026-08-05T06:55:25.000Z"
-    },
-    {
-      "id": "텐센트,AI모델‘Hy3’글로벌제공확대…제품·클라우드서비스적용",
-      "title": "텐센트, AI 모델 ‘Hy3’ 글로벌 제공 확대…제품·클라우드 서비스 적용",
-      "source": "테크월드",
-      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE16QkNINjkwb0RxWGJ2VFZKWHdLMHB5NHlqb29HOU1idWZpRzRrRnFIb0V5cTJpY0pUcUJIcUI1YkM0WmlZZ1ppU0QzOHlRRlFjaENKRUROSXBFdUIyQ011eGZBOWJ1bkRk?oc=5",
-      "published": "2026-08-05T06:55:06.000Z"
-    },
-    {
-      "id": "中국토전역을거대AI특구로,31개성시자치구전부특성화기술육성",
-      "title": "中 국토 전역을 거대 AI 특구로, 31개 성시자치구 전부 특성화 기술 육성",
-      "source": "뉴스핌",
-      "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE9FcW42MzN4cjRpd0xfcndTaUtfZ2R1NjFwc1c3R1lTV0tvWGh2SGRPcG9kNktTejhUY0prT19TUDV0WFNtVnFwOGZQSVN1bHhjaUtJWUpERWJzS1V1?oc=5",
-      "published": "2026-08-05T06:55:00.000Z"
-    },
-    {
-      "id": "방사청\"AI·유무인체계등자주국방핵심전력확보\"",
-      "title": "방사청 \"AI·유무인체계 등 자주국방 핵심전력 확보\"",
-      "source": "SPN 서울평양뉴스",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9JMUM2VTkyc2dtTTI5bWpOaUNSUm1NZ042aV9jMktyMDVxT3ZMXzRzSWkxMjFoNUJwSmJyNHJCYzVUVGRkU2UzR1gxbl95clhwbmNZZXV2SGVSN2szby1mRlBUT3lROUdtNlQ4?oc=5",
-      "published": "2026-08-05T06:53:09.000Z"
-    },
-    {
-      "id": "[3대메가프로젝트]‘반도체날개’달고경제대도약",
-      "title": "[3대 메가 프로젝트] ‘반도체 날개’ 달고 경제 대도약",
-      "source": "yonhapmidas.com",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE52bm43SVMwaWlYU0ZHcHJrRXp0NlBtTmNxdy13LWgwNWswejdvaTAyN2VNLUREVzNaWjgwZWQwNjVaYVR6T0JkR2RYMXBCQnVJTXZrOUhlUlpqV2FNYVVFZjFZa0NvaE9WRjI1VlJn?oc=5",
-      "published": "2026-08-05T06:52:49.000Z"
-    },
-    {
-      "id": "Spotify,Merlin과손잡고팬들의합법적AI리믹스·커버제작지원",
-      "title": "Spotify, Merlin과 손잡고 팬들의 합법적 AI 리믹스·커버 제작 지원",
-      "source": "Hypebeast.KR",
-      "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOeFlTYzJRLTJCV3M2Z0lxeHltUjJWcVhaMi1SZFRVTVJqamNIS1lvcEpUV2VaNXVOZVM4QmJyQTRpMy1UYTcxOTAzMEt4V3lFWml6Y05OLTl6cXRQVXBuMlcyQVR4QXpUNkNTS2hXbEN4NEl0THlFNElTaEpTYnNpS1AzOA?oc=5",
-      "published": "2026-08-05T06:52:32.000Z"
+      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFBuS1g3NncySDVzYkxka3ZwOHN3M3AzbUNaeUp3Q2tGVkVrUE0tZjIxeTZDZWttV1ZFNHRYOUw1ZlpGVkJ3Y2ctaE84cU13REZubFdSNDlyOVZUWkc4UTVsdEl2SlU?oc=5",
+      "published": "2026-08-05T06:56:09.000Z"
     }
   ],
   "weekly": {
