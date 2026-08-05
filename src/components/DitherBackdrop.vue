@@ -411,179 +411,18 @@ const SHAPES = {
     ctx.globalCompositeOperation = 'source-over'
   },
 
-  // 소개(메인) - 언덕 위의 세 친구.
-  //
-  // 하늘 -> 먼 산 -> 언덕 -> 나무 -> 인물 순으로 뒤에서부터 덮어 그린다.
-  // 디더링을 거치면 색이 사라지므로, 앞뒤를 톤 차이로만 구분해야 한다.
+  // 소개(메인) - 틸드.
+  // 셸에서 ~ 는 홈 디렉터리를 뜻한다. 메인 페이지에 이보다 맞는 기호가 없다.
   about: (ctx, c, r) => {
-    /** 창 크기가 달라져도 같은 자리에 오도록 번호로 값을 만든다 */
-    const rand = (i, salt) => {
-      const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
-      return x - Math.floor(x)
-    }
+    ctx.fillStyle = tone(FG_TONE)
+    ctx.font = `700 ${r * 0.72}px "IBM Plex Mono", monospace`
+    ctx.textBaseline = 'middle'
 
-    const HORIZON = r * 0.42 // 하늘과 언덕이 만나는 높이
-
-    /* ---------------- 하늘 ---------------- */
-    const sky = ctx.createLinearGradient(0, 0, 0, HORIZON)
-    sky.addColorStop(0, tone(0.72))
-    sky.addColorStop(1, tone(0.95))
-    ctx.fillStyle = sky
-    ctx.fillRect(0, 0, c, HORIZON)
-
-    /** 동그라미 여러 개를 겹쳐 만든 뭉게구름 */
-    const cloud = (x, y, w, v) => {
-      ctx.fillStyle = tone(v)
-      const lobes = 5
-      for (let i = 0; i < lobes; i++) {
-        const t = i / (lobes - 1)
-        const cx = x + (t - 0.5) * w
-        // 가운데가 봉긋하게 솟는다
-        const cy = y - Math.sin(t * Math.PI) * w * 0.1
-        const rad = w * (0.16 + Math.sin(t * Math.PI) * 0.12)
-        ctx.beginPath()
-        ctx.arc(cx, cy, rad, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-
-    cloud(c * 0.16, r * 0.13, c * 0.2, 1)
-    cloud(c * 0.44, r * 0.09, c * 0.16, 0.99)
-    cloud(c * 0.74, r * 0.15, c * 0.24, 1)
-    cloud(c * 0.94, r * 0.08, c * 0.14, 0.98)
-
-    /* ---------------- 먼 산 ---------------- */
-    ctx.fillStyle = tone(0.62)
-    ctx.beginPath()
-    ctx.moveTo(c * 0.34, HORIZON)
-    ctx.lineTo(c * 0.5, r * 0.24)
-    ctx.lineTo(c * 0.66, HORIZON)
-    ctx.closePath()
-    ctx.fill()
-
-    /* ---------------- 언덕 ---------------- */
-    // 왼쪽이 높고 오른쪽으로 완만하게 내려온다
-    const hillY = (t) => HORIZON - r * 0.06 + Math.pow(t, 1.6) * r * 0.16
-
-    ctx.fillStyle = tone(0.5)
-    ctx.beginPath()
-    ctx.moveTo(0, hillY(0))
-    for (let t = 0; t <= 1.001; t += 0.02) ctx.lineTo(t * c, hillY(t))
-    ctx.lineTo(c, r)
-    ctx.lineTo(0, r)
-    ctx.closePath()
-    ctx.fill()
-
-    // 아래로 갈수록 조금 진하게 (풀밭에 깊이가 생긴다)
-    const grass = ctx.createLinearGradient(0, HORIZON, 0, r)
-    grass.addColorStop(0, 'rgba(255,255,255,0)')
-    grass.addColorStop(1, 'rgba(0,0,0,0.22)')
-    ctx.fillStyle = grass
-    ctx.fillRect(0, HORIZON - r * 0.06, c, r)
-
-    /* ---------------- 들꽃 ---------------- */
-    ctx.fillStyle = tone(0.95)
-    for (let i = 0; i < 90; i++) {
-      const t = rand(i, 1)
-      const x = t * c
-      // 언덕 능선보다 아래에만 뿌린다
-      const y = hillY(t) + rand(i, 2) * (r - hillY(t)) * 0.95
-      const size = r * (0.004 + rand(i, 3) * 0.006)
-      ctx.beginPath()
-      ctx.arc(x, y, size, 0, Math.PI * 2)
-      ctx.fill()
-    }
-
-    /* ---------------- 오른쪽 나무 ---------------- */
-    const tx = c * 0.87
-    const ty = r * 0.52
-
-    // 줄기
-    ctx.fillStyle = tone(0.28)
-    ctx.fillRect(tx - c * 0.012, ty, c * 0.024, r * 0.3)
-
-    // 잎: 큰 덩어리 몇 개를 겹친다
-    const leaves = [
-      [0, -0.02, 0.13],
-      [-0.07, 0.04, 0.1],
-      [0.08, 0.03, 0.1],
-      [0.02, 0.1, 0.09],
-    ]
-    ctx.fillStyle = tone(0.34)
-    for (const [dx, dy, rad] of leaves) {
-      ctx.beginPath()
-      ctx.arc(tx + dx * c, ty - r * 0.12 + dy * r, rad * r, 0, Math.PI * 2)
-      ctx.fill()
-    }
-
-    /* ---------------- 세 친구 ---------------- */
-    /**
-     * 동글동글한 몸에 귀와 눈만 얹는다.
-     * 흰 몸 + 검은 윤곽이라 디더링해도 형태가 남는다.
-     */
-    const friend = (x, y, size, kind) => {
-      const outline = tone(0.12)
-
-      // 귀 (몸보다 먼저 그려 뒤로 보낸다)
-      ctx.fillStyle = tone(0.97)
-      ctx.strokeStyle = outline
-      ctx.lineWidth = Math.max(1.5, size * 0.05)
-
-      if (kind === 'rabbit') {
-        for (const side of [-1, 1]) {
-          ctx.beginPath()
-          ctx.ellipse(x + side * size * 0.42, y - size * 0.95, size * 0.16, size * 0.42, side * 0.2, 0, Math.PI * 2)
-          ctx.fill()
-          ctx.stroke()
-        }
-      } else {
-        for (const side of [-1, 1]) {
-          ctx.beginPath()
-          ctx.arc(x + side * size * 0.62, y - size * 0.5, size * 0.24, 0, Math.PI * 2)
-          ctx.fill()
-          ctx.stroke()
-        }
-      }
-
-      // 몸
-      ctx.beginPath()
-      ctx.arc(x, y, size, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-
-      // 눈 두 개
-      ctx.fillStyle = outline
-      for (const side of [-1, 1]) {
-        ctx.beginPath()
-        ctx.arc(x + side * size * 0.34, y - size * 0.08, size * 0.09, 0, Math.PI * 2)
-        ctx.fill()
-      }
-
-      // 입 (작은 곡선)
-      ctx.strokeStyle = outline
-      ctx.lineWidth = Math.max(1, size * 0.04)
-      ctx.beginPath()
-      ctx.arc(x, y + size * 0.12, size * 0.16, 0.2 * Math.PI, 0.8 * Math.PI)
-      ctx.stroke()
-
-      // 볼 (연한 톤이라 도트가 성기게 찍힌다)
-      ctx.fillStyle = tone(0.62)
-      for (const side of [-1, 1]) {
-        ctx.beginPath()
-        ctx.ellipse(x + side * size * 0.6, y + size * 0.12, size * 0.14, size * 0.09, 0, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-
-    const baseY = r * 0.7
-    const size = r * 0.11
-
-    // 가운데 셋은 콘텐츠 카드에 가려진다. 왼쪽 여백에 우사기를 크게 하나 더 둔다.
-    friend(c * 0.09, baseY - r * 0.02, size * 1.45, 'rabbit')
-
-    friend(c * 0.4, baseY, size, 'bear')
-    friend(c * 0.5, baseY + r * 0.01, size * 0.95, 'cat')
-    friend(c * 0.61, baseY + r * 0.02, size * 1.02, 'rabbit')
+    // ~ 는 글자 박스 가운데쯤에 낮게 앉는다. 눈으로 보이는 높이에 맞춘다.
+    ctx.textAlign = 'left'
+    ctx.fillText('~', c * -0.01, r * 0.46)
+    ctx.textAlign = 'right'
+    ctx.fillText('~', c * 1.01, r * 0.46)
   },
 }
 
