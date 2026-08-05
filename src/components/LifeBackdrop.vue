@@ -10,7 +10,7 @@ import { lifePhase } from '@/utils/lifeState.js'
 // 배경 진하기. 콘텐츠 카드가 불투명해 글자 뒤에 깔리지 않으므로
 // 레퍼런스처럼 또렷하게 보이도록 높게 잡는다.
 const ALPHA = 0.34
-const LOCK_BOOST = 1.7 // 잠긴 칸(그림)을 얼마나 더 밝게
+const LOCK_BOOST = 1 // 최종 화면은 그림만 남으므로 밝기를 나눌 필요가 없다
 const CELL = 4 // 기본 칸 크기. 4 미만으로 내리면 계산량이 급증
 const CELL_HEAVY = 6 // 지도가 있는 무거운 라우트용
 const DURATION = 3000 // 애니메이션 길이(ms)
@@ -65,8 +65,10 @@ const fbm = (x, y, s, octaves = 6) => {
 }
 
 const CLOUD_SEED = 7
-const CLOUD_SCALE = 5
-const CLOUD_GAIN = 1.15 // 대비. 키우면 구름 덩어리가 또렷해진다
+const CLOUD_SCALE = 3.2 // 작을수록 구름 덩어리가 크다
+const CLOUD_GAIN = 2.6 // 대비. 이 값이 낮으면 전체가 균일한 노이즈로 보인다
+const CLOUD_BIAS = -0.06 // 전체 밝기. 음수면 빈 하늘이 넓어진다
+const CLOUD_OCTAVES = 4 // 적을수록 덩어리가 뭉근하고, 많을수록 잘게 부서진다
 
 /* ================================================================
    라우트별 목표 그림
@@ -95,7 +97,7 @@ const SHAPES = {
     for (let y = 0; y < r; y++) {
       for (let x = 0; x < c; x++) {
         // 세로를 눌러(0.56) 구름이 가로로 퍼진 모양이 되게 한다
-        const v = fbm((x / c) * CLOUD_SCALE, (y / r) * CLOUD_SCALE * 0.56, CLOUD_SEED)
+        const v = fbm((x / c) * CLOUD_SCALE, (y / r) * CLOUD_SCALE * 0.56, CLOUD_SEED, CLOUD_OCTAVES)
         buf[y * c + x] = v
         if (v < min) min = v
         if (v > max) max = v
@@ -106,7 +108,7 @@ const SHAPES = {
     const span = max - min || 1
     for (let i = 0; i < buf.length; i++) {
       let v = (buf[i] - min) / span
-      v = (v - 0.5) * CLOUD_GAIN + 0.5
+      v = (v - 0.5) * CLOUD_GAIN + 0.5 + CLOUD_BIAS
       v = v < 0 ? 0 : v > 1 ? 1 : v
       const g = Math.round(v * 255)
       const p = i * 4
@@ -247,6 +249,7 @@ const restart = () => {
       engine.applyLock(i / 239)
     }
     engine.applyLock(1)
+    engine.clearUnlocked()
     engine.draw()
     lifePhase.value = 'idle'
     return
@@ -261,6 +264,7 @@ const restart = () => {
 
     if (elapsed >= DURATION) {
       engine.applyLock(1)
+      engine.clearUnlocked() // 잔해를 걷어내 구름만 남긴다
       engine.draw()
       stop() // rAF까지 멈춘다. 이후 CPU 사용 0
       return

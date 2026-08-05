@@ -66,6 +66,9 @@
 }
 
 html {
+  /* 배경 캔버스가 z-index:-1 이라 body에 배경을 주면 캔버스를 덮어 버린다.
+     페이지 바탕색은 html이 맡고 body는 투명하게 둔다. */
+  background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) var(--bg);
 }

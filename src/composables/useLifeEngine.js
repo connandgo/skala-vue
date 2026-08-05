@@ -192,6 +192,17 @@ export function createLifeEngine(canvas, options = {}) {
     grid = next
   }
 
+  /**
+   * 잠기지 않은 칸을 모두 지운다.
+   * 애니메이션이 끝난 뒤 호출하면 목표 그림만 깨끗하게 남는다.
+   * (라이프 잔해가 그림 위를 덮어 형태를 가리는 것을 막는다)
+   */
+  function clearUnlocked() {
+    for (let i = 0; i < grid.length; i++) {
+      if (!lockMap[i]) grid[i] = 0
+    }
+  }
+
   /** 화면 좌표에 글라이더(대각선으로 기어가는 패턴)를 놓는다 */
   function spawnGlider(px, py) {
     const gx = Math.floor(px / cellSize)
@@ -286,6 +297,7 @@ export function createLifeEngine(canvas, options = {}) {
     applyLock,
     step,
     spawnGlider,
+    clearUnlocked,
     draw,
     setColors,
     setCellSize,
