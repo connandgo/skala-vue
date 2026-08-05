@@ -58,7 +58,7 @@ const readAccounts = () => {
     out[id] =
       typeof value === 'string'
         ? { hash: value, prefs: emptyPrefs() } // 옛 형태
-        : { hash: value.hash, prefs: { ...emptyPrefs(), ...(value.prefs ?? {}) } }
+        : { hash: value.hash, prefs: { ...emptyPrefs(), ...value.prefs } }
   }
   return out
 }
