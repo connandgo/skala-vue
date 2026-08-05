@@ -16,7 +16,7 @@ export const SECTIONS = [
     id: 'text',
     num: '01',
     title: '텍스트',
-    desc: '글자 자체에 거는 효과입니다. 한 페이지에 하나만 쓰는 편이 좋습니다.',
+    desc: '글자 자체에 거는 효과입니다.',
     items: [
       {
         id: 'glitch',
@@ -76,7 +76,7 @@ color: transparent;`,
     id: 'motion',
     num: '02',
     title: '모션',
-    desc: '움직임은 시선을 강하게 끕니다. 꼭 필요한 곳에만 쓰세요.',
+    desc: '가만히 두어도 스스로 움직이는 효과입니다.',
     items: [
       {
         id: 'marquee',
@@ -146,7 +146,7 @@ io.observe(document.querySelector('.list'))`,
     id: 'interact',
     num: '03',
     title: '인터랙션',
-    desc: '마우스를 올려 보세요. 좋은 hover는 300ms 안팎에 끝납니다.',
+    desc: '마우스를 올리거나 화면에 들어올 때 반응하는 효과입니다.',
     items: [
       {
         id: 'spot',
