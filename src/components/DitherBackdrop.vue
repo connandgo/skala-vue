@@ -426,13 +426,17 @@ const lensRef = ref(null)
 const route = useRoute()
 
 /* ================================================================
-   커서 돋보기
-   배경이 도트라서, 그 도트를 그대로 확대하면 인쇄물을 확대경으로
-   들여다보는 느낌이 난다. 배경 캔버스 위에 겹쳐 그린다.
+   커서를 따라다니는 물방울
+   도트를 안쪽으로 살짝 당기고 밝기를 올린다.
+   당기는 세기가 가장자리에서 0이라 원 테두리가 보이지 않고,
+   물방울이 지나간 자리처럼 은은하게 일렁인다.
    ================================================================ */
-const LENS_R = 96 // 반지름(px)
-const LENS_ZOOM = 2.6 // 확대 배율
-const LENS_EASE = 0.18 // 커서를 따라가는 부드러움 (1이면 즉시)
+const LENS_R = 130 // 물방울 반지름(px)
+// 도트를 안쪽으로 당기는 세기. 가운데와 가장자리는 0이고 중간이 가장 크다.
+// 그래서 테두리가 생기지 않고 스르르 녹아든다.
+const LENS_PUSH = 0.22
+const LENS_GLOW = 0.5 // 지나갈 때 밝아지는 정도
+const LENS_EASE = 0.14 // 커서를 따라가는 부드러움 (1이면 즉시)
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 let image = null
@@ -726,38 +730,45 @@ const drawLens = () => {
   const { x: cx, y: cy } = lensPos
   if (cx < 0) return
 
-  lensCtx.save()
-  lensCtx.beginPath()
-  lensCtx.arc(cx, cy, LENS_R, 0, Math.PI * 2)
-  lensCtx.clip()
+  const span = Math.ceil(LENS_R / PX)
 
-  // 확대된 칸 크기. 원 안을 이 크기로 훑으며 원본 격자에서 값을 가져온다.
-  const cell = PX * LENS_ZOOM
-  const start = -Math.ceil(LENS_R / cell)
-  const end = -start
+  for (let j = -span; j <= span; j++) {
+    for (let i = -span; i <= span; i++) {
+      const dx = i * PX
+      const dy = j * PX
+      const d = Math.hypot(dx, dy)
+      if (d > LENS_R) continue
 
-  for (let j = start; j <= end; j++) {
-    for (let i = start; i <= end; i++) {
-      const px = cx + i * cell
-      const py = cy + j * cell
+      const f = d / LENS_R
 
-      // 확대 전 좌표로 되돌려 원본 격자 위치를 찾는다
-      const gx = Math.floor((cx + (px - cx) / LENS_ZOOM) / PX)
-      const gy = Math.floor((cy + (py - cy) / LENS_ZOOM) / PX)
+      // sin 곡선이라 가운데(0)와 가장자리(1)에서 밀림이 0이 된다.
+      // 원 경계에서 그림이 어긋나지 않아 테두리가 안 보인다.
+      const push = Math.sin(f * Math.PI) * LENS_PUSH
+
+      const gx = Math.floor((cx + dx * (1 - push)) / PX)
+      const gy = Math.floor((cy + dy * (1 - push)) / PX)
       if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue
 
+      // 가운데일수록 진하게, 가장자리로 갈수록 투명하게
+      lensCtx.globalAlpha = 1 - f * f
       lensCtx.fillStyle = cellColor(gy * cols + gx, gy)
-      lensCtx.fillRect(px, py, cell + 1, cell + 1)
+      lensCtx.fillRect(cx + dx, cy + dy, PX + 1, PX + 1)
     }
   }
-  lensCtx.restore()
 
-  // 유리 테두리
-  lensCtx.strokeStyle = 'rgba(255,255,255,0.55)'
-  lensCtx.lineWidth = 2
+  lensCtx.globalAlpha = 1
+
+  // 물방울이 머금은 빛. 'lighten'이라 어두운 곳은 그대로 두고 밝은 곳만 살아난다.
+  const glow = lensCtx.createRadialGradient(cx, cy, 0, cx, cy, LENS_R)
+  glow.addColorStop(0, `rgba(255,255,255,${LENS_GLOW * 0.5})`)
+  glow.addColorStop(0.55, `rgba(255,255,255,${LENS_GLOW * 0.18})`)
+  glow.addColorStop(1, 'rgba(255,255,255,0)')
+  lensCtx.globalCompositeOperation = 'lighten'
+  lensCtx.fillStyle = glow
   lensCtx.beginPath()
   lensCtx.arc(cx, cy, LENS_R, 0, Math.PI * 2)
-  lensCtx.stroke()
+  lensCtx.fill()
+  lensCtx.globalCompositeOperation = 'source-over'
 }
 
 const lensLoop = () => {
