@@ -17,8 +17,15 @@ import { onMounted, onUnmounted, ref } from 'vue'
  */
 
 const PX = 4 // 도트 한 칸 크기
-const DARK = '#1f1f1f'
+// 하늘(점이 성긴 곳)은 진한 회색, 아래로 갈수록 검정에 가까워진다
+const SKY_TOP = '#3d3d3d'
+const SKY_BOTTOM = '#141414'
+const EDGE = '#000000' // 구름 윤곽선
 const LIGHT = '#ffffff'
+// 흐린 값보다 이만큼 어두운 칸을 구름 윤곽선으로 본다.
+// 반경을 키우면 넓은 경계를, 임계값을 낮추면 더 많은 칸을 윤곽선으로 잡는다.
+const EDGE_RADIUS = 4
+const EDGE_THRESHOLD = 0.015
 const GAIN = 1.15 // 사진 대비
 const SHARPEN = 2.2 // 구름 윤곽 강조 세기 (0이면 원본 그대로)
 const SHARPEN_RADIUS = 2
@@ -65,6 +72,7 @@ let grid = new Uint8Array(0)
 let lockMap = new Uint8Array(0)
 let lockOrder = new Float32Array(0)
 let target = new Uint8Array(0)
+let edgeMap = new Uint8Array(0)
 
 let raf = null
 let resizeTimer = null
@@ -110,9 +118,11 @@ const buildTarget = () => {
 
   // 언샵 마스크: 흐린 버전을 빼서 구름 윤곽을 도드라지게 한다.
   // 이 처리가 없으면 농담만 남아 구름 경계가 뭉개져 보인다.
+  const edgeBlur = boxBlur(lum, cols, rows, EDGE_RADIUS)
   const sharpened = unsharpMask(lum, cols, rows, SHARPEN_RADIUS, SHARPEN)
 
   target = new Uint8Array(cols * rows)
+  edgeMap = new Uint8Array(cols * rows)
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const idx = y * cols + x
@@ -122,6 +132,9 @@ const buildTarget = () => {
 
       // 밝기가 이 칸의 임계값을 넘으면 밝은 픽셀
       target[idx] = v > (BAYER8[y & 7][x & 7] + 0.5) / 64 ? 1 : 0
+
+      // 흐린 값보다 크게 어두운 칸 = 구름 경계의 그늘. 여기만 검정으로 칠한다.
+      edgeMap[idx] = lum[idx] - edgeBlur[idx] < -EDGE_THRESHOLD ? 1 : 0
     }
   }
 }
@@ -223,11 +236,25 @@ const applyLock = (progress) => {
 /* ---------------------------------------------------------------- 렌더 */
 
 const render = () => {
-  // 어두운 색으로 전체를 깔고 밝은 픽셀만 위에 찍는다
-  // (칸마다 fillStyle을 바꾸지 않아 훨씬 빠르다)
-  ctx.fillStyle = DARK
+  // 1) 바탕: 위는 진한 회색, 아래로 갈수록 검정
+  const sky = ctx.createLinearGradient(0, 0, 0, h)
+  sky.addColorStop(0, SKY_TOP)
+  sky.addColorStop(1, SKY_BOTTOM)
+  ctx.fillStyle = sky
   ctx.fillRect(0, 0, w, h)
 
+  // 2) 구름 윤곽선만 검정으로 (같은 색끼리 모아 칠해야 빠르다)
+  ctx.fillStyle = EDGE
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const idx = y * cols + x
+      if (edgeMap[idx] && !(lockMap[idx] || grid[idx])) {
+        ctx.fillRect(x * PX, y * PX, PX, PX)
+      }
+    }
+  }
+
+  // 3) 밝은 픽셀
   ctx.fillStyle = LIGHT
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
