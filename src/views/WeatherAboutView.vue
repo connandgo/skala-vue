@@ -65,13 +65,6 @@ const PAGES = [
             위에서 도는 것이 콘웨이의 라이프 게임입니다. 칸마다 이웃이 2~3이면 살아남고, 정확히
             3이면 새로 태어납니다. 이 규칙만으로 점들이 저절로 꿈틀거립니다.
           </p>
-          <p>
-            화면 뒤의 배경도 같은 규칙으로 그립니다. 다만 거기서는 목표 그림의 픽셀이 하나씩 잠기며
-            1.1초 만에 자리를 잡고, 완성되면 계산을 멈춰 그 뒤로는 자원을 쓰지 않습니다.
-          </p>
-          <p class="concept-sub">
-            밝기를 점의 밀도로 바꾸는 8×8 Bayer 디더링을 씁니다. 인쇄물의 하프톤과 같은 원리입니다.
-          </p>
         </div>
 
         <div class="concept-item">
@@ -220,13 +213,17 @@ const PAGES = [
   border-bottom: 1px solid var(--border);
 }
 
+/* 섹션 제목. 같은 층위라 한 곳에서 함께 정한다. */
+.concept-title,
+.pages-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
 .concept-title {
   margin: 0 0 20px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
 }
 
 .concept-grid {
@@ -250,10 +247,6 @@ const PAGES = [
   color: var(--text-muted);
 }
 
-.concept-item p + p {
-  margin-top: 10px;
-}
-
 .concept-sub {
   margin-top: 10px;
   padding-left: 10px;
@@ -264,11 +257,6 @@ const PAGES = [
 /* ---------------- 페이지 카드 ---------------- */
 .pages-title {
   margin: 40px 0 20px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
 }
 
 .card {
