@@ -11,7 +11,7 @@ on:
 
 # Pages 배포에 필요한 권한
 permissions:
-  contents: write  # 수집한 news.json 을 되돌려 커밋한다
+  contents: read
   pages: write
   id-token: write
 
@@ -46,21 +46,6 @@ jobs:
           VITE_KOFIC_API_KEY: ${{ secrets.VITE_KOFIC_API_KEY }}
           VITE_TMDB_TOKEN: ${{ secrets.VITE_TMDB_TOKEN }}
         run: npm run build
-
-      - name: 수집한 뉴스 커밋
-        # 피드에는 최근 50건(약 1~2일치)만 담긴다.
-        # 실행할 때마다 되돌려 저장해야 '주간'에 7일치가 모인다.
-        continue-on-error: true
-        run: |
-          if [ -n "$(git status --porcelain public/news.json)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add public/news.json
-            git commit -m "[chore] 뉴스 갱신 (자동)"
-            git push
-          else
-            echo "변경 없음"
-          fi
 
       - name: SPA 폴백 생성
         # GitHub Pages는 정적 호스팅이라 /about 같은 경로를 모른다.
