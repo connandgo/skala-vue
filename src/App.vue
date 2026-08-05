@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import DitherBackdrop from '@/components/DitherBackdrop.vue'
+import LifeBackdrop from '@/components/LifeBackdrop.vue'
 import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
@@ -19,8 +19,8 @@ watch(isDark, (dark) => {
 </script>
 
 <template>
-  <!-- 배경: 흑백 디더링 도트 (고정, 콘텐츠 뒤) -->
-  <DitherBackdrop />
+  <!-- 배경: 라이프 게임 (라우트가 바뀔 때 3초간 움직인 뒤 정지) -->
+  <LifeBackdrop />
   <!-- 선택한 지역이 비/눈이면 화면 전체에 내리는 효과 -->
   <WeatherEffect :mode="fxMode" />
 
@@ -112,9 +112,7 @@ body {
   background: transparent;
 }
 
-.theme-dark .shader-bg {
-  filter: invert(1);
-}
+
 </style>
 
 <style scoped>

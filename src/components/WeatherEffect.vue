@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import { lifePhase } from '@/utils/lifeState.js'
 
 // 'rain' | 'snow' | 'none'
 const props = defineProps({
@@ -8,6 +9,9 @@ const props = defineProps({
     default: 'none',
   },
 })
+
+// 배경 라이프가 도는 동안에는 입자를 그리지 않는다 (배경끼리 겹치지 않도록)
+const active = computed(() => props.mode !== 'none' && lifePhase.value === 'idle')
 
 const canvasRef = ref(null)
 let ctx = null
@@ -89,7 +93,7 @@ const step = () => {
 
 const start = () => {
   stop()
-  if (props.mode === 'none') {
+  if (!active.value) {
     if (ctx) ctx.clearRect(0, 0, w, h)
     return
   }
@@ -114,8 +118,8 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
 })
 
-// 날씨가 바뀌면 입자를 새로 만든다
-watch(() => props.mode, start)
+// 날씨가 바뀌거나 라이프가 멈추면 다시 판단한다
+watch(active, start)
 
 // 애니메이션 루프와 이벤트를 반드시 정리한다 (메모리 누수 방지)
 onUnmounted(() => {
