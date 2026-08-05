@@ -11,7 +11,7 @@
 
 | 경로 | 화면 | 내용 |
 | --- | --- | --- |
-| `/` | 소개 | 각 페이지 안내. 배경은 라이프 게임으로 그린다 |
+| `/` | 소개 | 각 페이지 안내. 라이프 게임이 실제로 도는 데모를 함께 둔다 |
 | `/news` | AI 뉴스 | 일간(구글 뉴스 RSS) / 주간(GeekNews Weekly). 주제 6갈래로 자동 분류 |
 | `/effects` | 디자인 이펙트 | 프론트엔드 시각 효과 카탈로그. 각 효과의 코드를 함께 본다 |
 | `/movies` | 영화 순위 | 영화진흥위원회(KOFIC) 일별·주간 박스오피스 + TMDB 포스터 |
@@ -25,6 +25,7 @@
 - **Vue Router 5** — 전 라우트 지연 로딩, 동적 경로, Catch-all
 - **Pinia 3** — `authStore`(계정·선호 설정), `configStore`(온도 단위). 두 스토어 모두 setup 문법
 - **Axios** — KOFIC·TMDB 호출. API별로 인스턴스를 나눠 baseURL·timeout·헤더를 따로 잡는다
+- **Element Plus** — 빈 상태(`el-empty`)와 로딩 자리(`el-skeleton`). 전체 등록은 번들이 1MB 가까이 늘어 쓰는 것만 직접 가져온다. 기본 테마가 이 사이트의 흑백 톤과 부딪혀 `assets/element-theme.css`에서 `--el-*` 변수만 덮어썼다
 - **Leaflet** — 지역 선택 지도
 - **Vite 8** — 번들러
 
@@ -89,11 +90,11 @@ npm run news      # 뉴스를 새로 모아 public/news.json 갱신
 ```
 src/
 ├── api/            외부 API 호출 (weather, boxoffice, tmdb, news)
-├── assets/         전역 CSS
+├── assets/         전역 CSS (element-theme.css 는 Element Plus 톤 맞추기)
 ├── components/
 │   ├── weather/    날씨 전용 (RegionMap, CityTable, CityPanel)
 │   ├── effects/    이펙트 카드
-│   └── ...         공용 (UnitToggler, AuthMenu, AuthDialog, DitherBackdrop …)
+│   └── ...         공용 (UnitToggler, AuthMenu, LifeDemo, DitherBackdrop …)
 ├── data/           도시 좌표, 평년값, 이펙트 정의
 ├── router/         라우트 정의
 ├── stores/         Pinia 스토어
