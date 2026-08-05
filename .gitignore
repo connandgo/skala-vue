@@ -44,3 +44,6 @@ __screenshots__/
 
 # 강사님 배포 샘플 프로젝트 (참고용, 별개 앱이라 커밋하지 않음)
 vue-mock-api-weather-sample02/
+
+# 참고용으로 받아 둔 메일
+*.eml
