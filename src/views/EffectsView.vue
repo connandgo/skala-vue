@@ -99,9 +99,7 @@ onUnmounted(() => {
       <span class="eyebrow">reference</span>
       <h1 class="page-title">디자인 이펙트 카탈로그</h1>
       <p class="page-desc">
-        다양한 프론트엔드 디자인 이펙트를 직접 확인해 보고, 코드도 함께 확인해 보세요. 효과마다 이름과
-        영문 검색어를 붙여 두었습니다. 이름을 알아야 검색할 수 있고, 검색할 수 있어야 말이 통합니다.
-        데모는 전부 실제로 동작하니 마우스를 올려 보세요.
+        직접 확인해 보고 코드까지 가져가세요. 이름과 영문 검색어를 함께 적어 두었습니다.
       </p>
     </header>
 
@@ -210,7 +208,6 @@ onUnmounted(() => {
 }
 
 .sec-desc {
-  max-width: 56ch;
   margin: 0 0 28px;
   font-size: 0.85rem;
   color: var(--text-muted);

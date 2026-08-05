@@ -258,6 +258,7 @@ body {
 }
 
 .page-desc {
+  text-wrap: balance;
   margin-top: 10px;
   font-size: 0.9rem;
   color: var(--text-muted);

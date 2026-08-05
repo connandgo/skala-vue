@@ -213,6 +213,7 @@ const restMax = computed(() =>
 }
 
 .page-desc {
+  text-wrap: balance;
   margin-top: 8px;
   font-size: 0.9rem;
   color: var(--text-muted);

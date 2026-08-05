@@ -80,7 +80,10 @@ body {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.7;
+  /* 한국어는 어절 중간에서 자르지 않는다 */
   word-break: keep-all;
+  /* 다만 URL처럼 띄어쓰기 없는 긴 문자열은 넘치지 않게 끊어 준다 */
+  overflow-wrap: break-word;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -117,6 +120,9 @@ h4 {
 
 p {
   margin: 0;
+  /* keep-all 이라 띄어쓰기에서만 줄이 바뀐다.
+     그대로 두면 마지막 줄에 한 단어만 남기 쉬워, pretty로 그 고아 줄을 막는다. */
+  text-wrap: pretty;
 }
 
 ul,

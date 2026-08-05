@@ -16,7 +16,7 @@ export const SECTIONS = [
     id: 'text',
     num: '01',
     title: '텍스트',
-    desc: '글자 자체에 거는 효과입니다. 존재감이 크기 때문에 한 페이지에 하나만 쓰는 편이 좋습니다.',
+    desc: '글자 자체에 거는 효과입니다. 한 페이지에 하나만 쓰는 편이 좋습니다.',
     items: [
       {
         id: 'glitch',
@@ -76,7 +76,7 @@ color: transparent;`,
     id: 'motion',
     num: '02',
     title: '모션',
-    desc: '움직임은 시선을 강하게 끌기 때문에, 필요한 곳에만 써야 합니다. 모든 요소를 순서대로 떠오르게 만들면 오히려 값싸 보입니다.',
+    desc: '움직임은 시선을 강하게 끕니다. 꼭 필요한 곳에만 쓰세요.',
     items: [
       {
         id: 'marquee',
@@ -146,7 +146,7 @@ io.observe(document.querySelector('.list'))`,
     id: 'interact',
     num: '03',
     title: '인터랙션',
-    desc: '마우스를 올려 보세요. 잘 만든 hover는 300ms 안팎에 cubic-bezier(.2,.8,.2,1)로 끝납니다.',
+    desc: '마우스를 올려 보세요. 좋은 hover는 300ms 안팎에 끝납니다.',
     items: [
       {
         id: 'spot',
@@ -209,7 +209,7 @@ a:hover::after { transform: scaleX(1); transform-origin: left; }`,
     id: 'bg',
     num: '04',
     title: '배경 패턴',
-    desc: '전부 이미지 없이 CSS만으로 만듭니다. 공통 규칙이 하나 있습니다 — 배경이 눈에 띄기 시작하면 이미 실패입니다.',
+    desc: '이미지 없이 CSS만으로 만듭니다. 눈에 띄기 시작하면 이미 실패입니다.',
     items: [
       {
         id: 'mask',
@@ -297,7 +297,7 @@ background-size: 36px 36px;`,
     id: 'surface',
     num: '05',
     title: '표면 · 테두리',
-    desc: '그림자를 쓰지 않기로 했다면, 면과 면을 구분할 다른 방법이 필요합니다.',
+    desc: '그림자를 쓰지 않고 면과 면을 구분하는 방법들입니다.',
     items: [
       {
         id: 'bracket',

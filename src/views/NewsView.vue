@@ -46,8 +46,8 @@ const today = computed(() =>
 /** 두 갈래가 무엇을 위한 것인지 한 줄로 알려 준다 */
 const lede = computed(() =>
   range.value === 'daily'
-    ? '오늘 나온 국내 AI 기사를 모았습니다. 지금 무슨 일이 벌어지고 있는지 훑어보세요.'
-    : '한 주의 흐름을 짚는 뉴스레터입니다. 지난 일주일간 개발자들이 가장 많이 읽은 글과, 그 흐름을 엮어 정리한 글을 함께 싣습니다.',
+    ? '오늘 나온 국내 AI 기사를 모은 실시간 뉴스입니다.'
+    : '한 주의 흐름을 짚는 트렌드 뉴스레터입니다.',
 )
 </script>
 
@@ -231,7 +231,6 @@ const lede = computed(() =>
 }
 
 .lede {
-  max-width: 46ch;
   margin-top: 10px;
   font-size: 0.85rem;
   line-height: 1.7;
@@ -362,6 +361,7 @@ const lede = computed(() =>
 }
 
 .sec-hint {
+  text-wrap: balance;
   margin: 8px 0 0;
   font-family: var(--font-mono);
   font-size: 0.74rem;

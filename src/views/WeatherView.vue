@@ -246,6 +246,7 @@ onMounted(loadWeather)
 }
 
 .page-desc {
+  text-wrap: balance;
   margin-top: 8px;
   font-size: 0.85rem;
   color: var(--text-muted);
