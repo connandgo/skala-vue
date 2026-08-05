@@ -156,8 +156,8 @@ onMounted(loadWeather)
     </p>
     <p v-else-if="errorMessage" class="state-msg error">{{ errorMessage }}</p>
 
-    <!-- 좌: 고르는 곳 / 우: 보는 곳 -->
-    <div class="split">
+    <!-- 위: 고르는 곳 / 아래: 보는 곳 -->
+    <div class="stack">
       <section class="pane pane-map">
         <div class="pane-head">
           <h2>지역 선택</h2>
@@ -287,12 +287,13 @@ onMounted(loadWeather)
 }
 
 /* ---------------- 2단 ---------------- */
-.split {
+/*
+ * 지도를 좌우로 나누면 지도가 상세보다 짧아 왼쪽 아래가 텅 빈다.
+ * 지도는 가로로 길수록 좋으니 폭을 다 쓰게 하고, 상세를 아래에 둔다.
+ */
+.stack {
   display: grid;
-  /* 지도가 조금 더 넓다. 상세는 세로로 긴 정보라 좁아도 읽힌다. */
-  grid-template-columns: 1.15fr 1fr;
   gap: 20px;
-  align-items: start;
 }
 
 .pane {
@@ -424,9 +425,6 @@ details[open] > summary {
 }
 
 @media (max-width: 860px) {
-  .split {
-    grid-template-columns: 1fr;
-  }
   .page-title {
     font-size: 1.7rem;
   }

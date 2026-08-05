@@ -41,13 +41,12 @@ const makeIcon = (item, active) => {
   return L.divIcon({
     className: 'weather-pin-wrap',
     html: `
-      <div class="weather-pin${active ? ' active' : ''}"
-           style="background:${bg};color:${ink}">
-        <span class="pin-temp">${toDisplayTemp(item.temp, configStore.unit)}°</span>
+      <div class="weather-pin${active ? ' active' : ''}">
+        <span class="pin-chip" style="background:${bg};color:${ink}">${toDisplayTemp(item.temp, configStore.unit)}°</span>
         <span class="pin-name">${item.name}</span>
       </div>`,
-    iconSize: [56, 38],
-    iconAnchor: [28, 38],
+    iconSize: [50, 42],
+    iconAnchor: [25, 21],
   })
 }
 
@@ -85,7 +84,8 @@ onMounted(async () => {
   })
 
   // 흑백 타일 (키 불필요). 마커 색이 돋보이도록 배경 지도는 무채색으로 둔다.
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  // 글자 없는 타일. 지도가 들고 있는 지명은 우리 마커와 겹쳐 지저분해진다.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     maxZoom: 19,
   }).addTo(map)
@@ -129,9 +129,9 @@ onUnmounted(() => {
   <div class="map-box">
     <div ref="mapEl" class="map-canvas"></div>
 
-    <!-- 색상 범례: 색만으로 값을 읽지 않도록 구간 라벨을 함께 둔다 -->
+    <!-- 색상 범례. 지도 위에 얹어 세로 공간을 아끼고, 색만으로 읽지 않도록 값을 함께 둔다 -->
     <div class="legend">
-      <span class="legend-title">기온</span>
+      <span class="legend-end">0°</span>
       <div class="legend-scale">
         <span
           v-for="l in legend"
@@ -141,61 +141,51 @@ onUnmounted(() => {
           :title="l.label"
         ></span>
       </div>
-      <span class="legend-ends">0°C 미만 → 35°C 이상</span>
+      <span class="legend-end">35°+</span>
     </div>
-
-    <p class="map-hint">지도의 마커를 클릭하면 해당 지역의 상세 날씨가 표시됩니다.</p>
   </div>
 </template>
 
 <style scoped>
 .map-box {
-  margin-top: 6px;
+  position: relative;
 }
 
 .map-canvas {
-  height: 360px;
+  height: 460px;
   border: 1px solid var(--border);
   background: var(--bg-subtle);
 }
 
 /* ---------------- 범례 ---------------- */
+/* 지도 위에 얹는다. 아래에 두면 지도가 그만큼 낮아진다. */
 .legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 500;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  background: var(--nav-bg);
+  backdrop-filter: blur(6px);
 }
 
-.legend-title {
+.legend-end {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 0.65rem;
   color: var(--text-muted);
 }
 
 .legend-scale {
   display: flex;
-  border: 1px solid var(--border);
 }
 
 .legend-step {
-  width: 26px;
-  height: 12px;
-}
-
-.legend-ends {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-muted);
-}
-
-.map-hint {
-  margin-top: 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  width: 18px;
+  height: 8px;
 }
 </style>
 
@@ -209,17 +199,17 @@ onUnmounted(() => {
   filter: grayscale(1) invert(1) contrast(0.85) brightness(0.95);
 }
 
-/* 마커 - 기온 색이 채워지고, 테두리로 형태를 보장한다 */
+/*
+ * 마커 - 온도 칩과 지역명을 위아래로 나눈다.
+ * 예전처럼 한 상자에 둘을 욱여넣으면 열 개가 모여 글씨가 뭉갠다.
+ */
 .weather-pin {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 38px;
-  border: 1px solid var(--text);
+  gap: 2px;
   font-family: var(--font-mono);
-  line-height: 1.15;
+  line-height: 1;
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -228,21 +218,39 @@ onUnmounted(() => {
   transform: translateY(-2px);
 }
 
-/* 선택된 마커는 색이 아니라 굵은 테두리로 표시한다 (색은 기온 전용) */
-.weather-pin.active {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-  transform: translateY(-2px);
-}
-
-.pin-temp {
-  font-size: 0.82rem;
+.pin-chip {
+  padding: 3px 6px;
+  border: 1px solid var(--text);
+  font-size: 0.76rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .pin-name {
+  padding: 1px 4px;
+  background: var(--bg);
+  color: var(--text);
   font-size: 0.62rem;
   letter-spacing: 0.02em;
+  /* 지도 위에서도 읽히도록 바탕을 깐다 */
+  border: 1px solid var(--border);
+}
+
+/* 선택된 마커는 색이 아니라 형태로 표시한다 (색은 기온 전용) */
+.weather-pin.active {
+  transform: translateY(-3px) scale(1.12);
+  z-index: 600;
+}
+
+.weather-pin.active .pin-chip {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.weather-pin.active .pin-name {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
 }
 
 /* Leaflet 기본 UI를 디자인에 맞춰 각지게 */

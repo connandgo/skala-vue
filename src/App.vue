@@ -4,6 +4,7 @@ import DitherBackdrop from '@/components/DitherBackdrop.vue'
 import LifeIntro from '@/components/LifeIntro.vue'
 import WeatherEffect from '@/components/WeatherEffect.vue'
 import { fxMode } from '@/utils/weatherFx.js'
+import { useRoute } from 'vue-router'
 // [실습] 과제 - 날씨 (컴포넌트) 158쪽
 import { RouterLink, RouterView } from 'vue-router'
 import AuthMenu from '@/components/AuthMenu.vue'
@@ -18,6 +19,18 @@ const isDark = ref(document.documentElement.classList.contains('theme-dark'))
 
 // 값이 바뀔 때마다 html 태그의 클래스와 localStorage를 갱신
 const auth = useAuthStore()
+
+/*
+ * 비·눈은 날씨 페이지에서만 내린다.
+ * 다른 페이지로 옮겨도 계속 내리면 그 페이지와 아무 상관 없는 소음이 된다.
+ */
+const route = useRoute()
+watch(
+  () => route.path,
+  (path) => {
+    if (!path.startsWith('/weather')) fxMode.value = 'none'
+  },
+)
 
 watch(isDark, (dark) => {
   document.documentElement.classList.toggle('theme-dark', dark)
