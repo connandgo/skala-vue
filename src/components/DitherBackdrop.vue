@@ -72,16 +72,34 @@ const SHAPES = {
     }
   },
 
-  // 디자인 이펙트 - 중괄호를 좌우 끝으로 벌린다
+  // 디자인 이펙트 - 계조 띠(step wedge).
+  // 밝기를 한 단씩 낮춘 띠라, 디더링이 그 단계를 점 밀도로 바꿔 보여준다.
+  // 인쇄소에서 농담을 맞출 때 쓰는 견본이 이 모양이다.
   effects: (ctx, c, r) => {
-    ctx.fillStyle = tone(FG_TONE)
-    ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
-    ctx.textBaseline = 'middle'
-    // 가운데 정렬로 밀면 글자가 잘려서, 각 변에 붙여 정렬한다
-    ctx.textAlign = 'left'
-    ctx.fillText('{', c * -0.015, r * 0.5)
-    ctx.textAlign = 'right'
-    ctx.fillText('}', c * 1.015, r * 0.5)
+    const STEPS = 9
+    const band = c * 0.11
+    const stepH = r / STEPS
+
+    for (let i = 0; i < STEPS; i++) {
+      // 0.95 -> 0.08 을 균등하게 나눈다
+      const v = 0.95 - (i / (STEPS - 1)) * 0.87
+      const y = i * stepH
+      // 반올림 때문에 단 사이에 실틈이 생기지 않도록 1칸씩 겹쳐 칠한다
+      const h = stepH + 1
+
+      ctx.fillStyle = tone(v)
+      ctx.fillRect(0, y, band, h)
+      // 오른쪽은 위아래를 뒤집어 두 띠가 가운데를 감싸게 한다
+      ctx.fillRect(c - band, r - y - h, band, h)
+    }
+
+    // 안쪽 모서리에 어두운 선.
+    // 배경(0.30)과 밝기가 같아지는 단이 하나 생겨 그 부분만 녹아 사라지는데,
+    // 경계선을 그으면 띠가 하나의 덩어리로 읽힌다.
+    const edge = Math.max(2, Math.round(c * 0.004))
+    ctx.fillStyle = tone(0.04)
+    ctx.fillRect(band, 0, edge, r)
+    ctx.fillRect(c - band - edge, 0, edge, r)
   },
 
   // 소개(메인) - 셸 프롬프트.
