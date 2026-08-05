@@ -395,64 +395,19 @@ const SHAPES = {
     ctx.globalCompositeOperation = 'source-over'
   },
 
-  // 소개(메인) - 쉬고 있는 터미널.
-  //
-  // 인트로에서 커널 패닉이 흐르던 그 화면이 조용해진 모습이다.
-  // 글자를 실제로 쓰지 않고 '글자 길이만큼의 막대'로 그린다.
-  // 디더링을 거치면 어차피 도트로 뭉개져, 막대가 오히려 코드처럼 읽힌다.
+  // 소개(메인) - 셸 프롬프트.
+  // 가운데는 콘텐츠 카드가 덮으므로, 좌우 여백으로 밀어내야 보인다.
   about: (ctx, c, r) => {
-    const LINES = 34
-    const lineH = r / LINES
-    const barH = lineH * 0.42 // 글자 높이
-    const gutter = c * 0.045 // 줄 번호 자리
-    const left = gutter + c * 0.02
-    const right = c * 0.97
-
-    /**
-     * 줄마다 같은 모양이 나오도록 번호로 값을 만든다.
-     * Math.random을 쓰면 창 크기를 바꿀 때마다 코드가 춤춘다.
-     */
-    const rand = (i, salt) => {
-      const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
-      return x - Math.floor(x)
-    }
-
-    for (let i = 0; i < LINES; i++) {
-      const y = i * lineH + (lineH - barH) / 2
-
-      // 예닐곱 줄에 한 번은 빈 줄 (문단이 나뉘어 보인다)
-      if (rand(i, 3) < 0.14) continue
-
-      // 줄 번호
-      ctx.fillStyle = tone(0.42)
-      ctx.fillRect(c * 0.012, y, gutter * 0.45 * (0.6 + rand(i, 9) * 0.4), barH * 0.8)
-
-      // 들여쓰기 0~3단계
-      const depth = Math.floor(rand(i, 1) * 4)
-      const x0 = left + depth * c * 0.022
-
-      // 한 줄을 토막 몇 개로 나눈다. 낱말 사이가 벌어져야 코드처럼 보인다.
-      const chunks = 2 + Math.floor(rand(i, 5) * 3)
-      let x = x0
-      for (let k = 0; k < chunks; k++) {
-        const w = (right - x0) * (0.08 + rand(i, k + 20) * 0.22)
-        if (x + w > right) break
-
-        // 첫 토막(키워드 자리)을 밝게 두면 문장에 강약이 생긴다
-        ctx.fillStyle = tone(k === 0 ? FG_TONE : 0.62 + rand(i, k + 40) * 0.2)
-        ctx.fillRect(x, y, w, barH)
-        x += w + c * 0.012
-      }
-    }
-
-    // 마지막 줄의 프롬프트와 커서
-    const py = (LINES - 2) * lineH + (lineH - barH) / 2
     ctx.fillStyle = tone(FG_TONE)
-    ctx.font = `700 ${barH * 1.5}px "IBM Plex Mono", monospace`
+    ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'left'
-    ctx.fillText('>', left, py + barH / 2)
-    ctx.fillRect(left + c * 0.022, py, c * 0.012, barH)
+    ctx.fillText('>', c * -0.015, r * 0.5)
+
+    // 커서. '_' 글자는 글자 박스 바닥에 붙어 힘없이 보여서 사각형으로 그린다.
+    const cw = r * 0.17
+    const ch = r * 0.34
+    ctx.fillRect(c - cw * 0.72, (r - ch) / 2, cw, ch)
   },
 }
 
