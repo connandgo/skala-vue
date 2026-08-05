@@ -72,34 +72,29 @@ const SHAPES = {
     }
   },
 
-  // 디자인 이펙트 - 계조 띠(step wedge).
-  // 밝기를 한 단씩 낮춘 띠라, 디더링이 그 단계를 점 밀도로 바꿔 보여준다.
-  // 인쇄소에서 농담을 맞출 때 쓰는 견본이 이 모양이다.
+  // 디자인 이펙트 - 좌우 끝의 큰 별표.
+  // 폰트에 없는 글자일 수 있어 직접 그린다. 중심에서 뻗은 6개 획.
   effects: (ctx, c, r) => {
-    const STEPS = 9
-    const band = c * 0.11
-    const stepH = r / STEPS
+    // 별이 통째로 보이려면 카드 옆 여백 안에 들어와야 한다.
+    // 화면 높이로만 크기를 잡으면 여백보다 커져서 잘린다.
+    const R = Math.min(r * 0.16, c * 0.085)
+    const thick = R * 0.2
 
-    for (let i = 0; i < STEPS; i++) {
-      // 0.95 -> 0.08 을 균등하게 나눈다
-      const v = 0.95 - (i / (STEPS - 1)) * 0.87
-      const y = i * stepH
-      // 반올림 때문에 단 사이에 실틈이 생기지 않도록 1칸씩 겹쳐 칠한다
-      const h = stepH + 1
-
-      ctx.fillStyle = tone(v)
-      ctx.fillRect(0, y, band, h)
-      // 오른쪽은 위아래를 뒤집어 두 띠가 가운데를 감싸게 한다
-      ctx.fillRect(c - band, r - y - h, band, h)
+    const star = (cx, cy) => {
+      ctx.save()
+      ctx.translate(cx, cy)
+      ctx.fillStyle = tone(FG_TONE)
+      for (let i = 0; i < 3; i++) {
+        ctx.rotate(Math.PI / 3) // 60도씩 돌려 6방향을 만든다
+        ctx.fillRect(-thick / 2, -R, thick, R * 2)
+      }
+      ctx.restore()
     }
 
-    // 안쪽 모서리에 어두운 선.
-    // 배경(0.30)과 밝기가 같아지는 단이 하나 생겨 그 부분만 녹아 사라지는데,
-    // 경계선을 그으면 띠가 하나의 덩어리로 읽힌다.
-    const edge = Math.max(2, Math.round(c * 0.004))
-    ctx.fillStyle = tone(0.04)
-    ctx.fillRect(band, 0, edge, r)
-    ctx.fillRect(c - band - edge, 0, edge, r)
+    // 반지름의 1.4배 안쪽에 두면 여유를 두고 다 들어온다
+    const cx = R * 1.4
+    star(cx, r * 0.5)
+    star(c - cx, r * 0.5)
   },
 
   // 소개(메인) - 셸 프롬프트.
@@ -133,7 +128,7 @@ const resolveShape = (path) => {
 
 // 등장 연출. false로 두면 애니메이션 없이 그림만 바로 나온다.
 const ANIMATE = true
-const DURATION = 2200 // 애니메이션 길이(ms)
+const DURATION = 2000 // 애니메이션 길이(ms)
 // 세대 간격(ms). 짧을수록 점들이 빠르게 꿈틀거려 산만해진다.
 const TICK = 220
 // 초기 노이즈 밀도.
