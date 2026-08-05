@@ -32,7 +32,7 @@ import { CITIES } from '@/data/cities.js'
     </ul>
 
     <div class="actions">
-      <RouterLink to="/" class="link-btn">← 메인 대시보드로 돌아가기</RouterLink>
+      <RouterLink to="/weather" class="link-btn">날씨 대시보드 보기 →</RouterLink>
     </div>
   </div>
 </template>

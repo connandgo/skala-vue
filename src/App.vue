@@ -40,10 +40,10 @@ watch(isDark, (dark) => {
 
       <!-- 페이지 라우팅 Navigation Bar (RouterLink) -->
       <ul class="nav-links">
-        <li><RouterLink to="/">날씨 대시보드</RouterLink></li>
+        <li><RouterLink to="/">소개</RouterLink></li>
+        <li><RouterLink to="/weather">날씨 대시보드</RouterLink></li>
         <li><RouterLink to="/movies">영화 순위</RouterLink></li>
         <li><RouterLink to="/challenges">코드 챌린지</RouterLink></li>
-        <li><RouterLink to="/about">소개</RouterLink></li>
       </ul>
 
       <div class="nav-actions">

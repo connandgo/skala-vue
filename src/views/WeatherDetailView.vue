@@ -47,7 +47,7 @@ onMounted(async () => {
 /** 뒤로 가기 (히스토리가 없으면 홈으로) */
 const goBack = () => {
   if (window.history.length > 1) router.back()
-  else router.push('/')
+  else router.push('/weather')
 }
 </script>
 
@@ -71,7 +71,7 @@ const goBack = () => {
 
     <div class="actions">
       <button @click="goBack">← 뒤로</button>
-      <RouterLink to="/" class="link-btn">대시보드로</RouterLink>
+      <RouterLink to="/weather" class="link-btn">대시보드로</RouterLink>
     </div>
   </div>
 </template>

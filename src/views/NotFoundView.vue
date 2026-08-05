@@ -13,8 +13,8 @@ const route = useRoute()
     <p class="desc">주소가 잘못되었거나 삭제된 페이지입니다.</p>
 
     <div class="actions">
-      <RouterLink to="/" class="link-btn">대시보드로 돌아가기</RouterLink>
-      <RouterLink to="/about" class="link-btn">서비스 소개</RouterLink>
+      <RouterLink to="/" class="link-btn">메인으로 돌아가기</RouterLink>
+      <RouterLink to="/weather" class="link-btn">날씨 대시보드</RouterLink>
     </div>
   </div>
 </template>

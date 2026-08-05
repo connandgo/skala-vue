@@ -104,8 +104,8 @@ const tone = (v) => {
 const resolveShape = (path) => {
   if (path.startsWith('/movies')) return SHAPES.movies
   if (path.startsWith('/challenges')) return SHAPES.challenges
-  if (path.startsWith('/about')) return SHAPES.about
-  return null // 그 외에는 구름 사진
+  if (path === '/') return SHAPES.about // 메인(소개)
+  return null // 날씨 페이지는 구름 사진
 }
 
 // 등장 연출. false로 두면 애니메이션 없이 그림만 바로 나온다.

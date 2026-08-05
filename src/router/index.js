@@ -11,14 +11,15 @@ import { createRouter, createWebHistory } from 'vue-router'
  */
 const routes = [
   {
+    // 소개가 메인 화면
     path: '/',
-    name: 'WeatherHome',
-    component: () => import('@/views/WeatherHomeView.vue'),
+    name: 'About',
+    component: () => import('@/views/WeatherAboutView.vue'),
   },
   {
-    path: '/about',
-    name: 'WeatherAbout',
-    component: () => import('@/views/WeatherAboutView.vue'),
+    path: '/weather',
+    name: 'WeatherHome',
+    component: () => import('@/views/WeatherHomeView.vue'),
   },
   {
     // :cityId 자리에 들어온 값을 페이지에서 route.params.cityId로 받는다
