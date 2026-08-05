@@ -2,13 +2,16 @@ name: Deploy to GitHub Pages
 
 # main 브랜치에 push 되면 자동으로 빌드 → 배포
 on:
+  # 6시간마다 뉴스를 새로 받아 다시 배포한다
+  schedule:
+    - cron: "0 */6 * * *"
   push:
     branches: [main]
   workflow_dispatch: # 저장소 Actions 탭에서 수동 실행도 가능
 
 # Pages 배포에 필요한 권한
 permissions:
-  contents: read
+  contents: write  # 수집한 news.json 을 되돌려 커밋한다
   pages: write
   id-token: write
 
@@ -31,12 +34,33 @@ jobs:
       - name: 의존성 설치
         run: npm ci
 
+      - name: 뉴스 수집 (GeekNews)
+        # 반드시 빌드 앞에 둔다. public/news.json 을 빌드가 dist로 복사하기 때문이다.
+        # 피드가 죽어도 배포는 계속한다. 저장소에 있는 직전 news.json이 쓰인다.
+        continue-on-error: true
+        run: npm run news
+
       - name: 빌드
         # API 키는 저장소 Secrets에서 주입한다 (소스에는 남지 않는다)
         env:
           VITE_KOFIC_API_KEY: ${{ secrets.VITE_KOFIC_API_KEY }}
           VITE_TMDB_TOKEN: ${{ secrets.VITE_TMDB_TOKEN }}
         run: npm run build
+
+      - name: 수집한 뉴스 커밋
+        # 피드에는 최근 50건(약 1~2일치)만 담긴다.
+        # 실행할 때마다 되돌려 저장해야 '주간'에 7일치가 모인다.
+        continue-on-error: true
+        run: |
+          if [ -n "$(git status --porcelain public/news.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add public/news.json
+            git commit -m "[chore] 뉴스 갱신 (자동)"
+            git push
+          else
+            echo "변경 없음"
+          fi
 
       - name: SPA 폴백 생성
         # GitHub Pages는 정적 호스팅이라 /about 같은 경로를 모른다.

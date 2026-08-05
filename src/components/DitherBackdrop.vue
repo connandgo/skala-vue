@@ -97,21 +97,65 @@ const SHAPES = {
     star(c - cx, r * 0.5)
   },
 
-  // AI 뉴스 - 좌우 여백에 신문 본문처럼 촘촘한 가로줄.
-  // 글자를 흉내 낸 줄이라 멀리서 보면 조판된 지면처럼 읽힌다.
+  // 뉴스 - 경위선이 그어진 지구본.
+  // 왼쪽 끝에 반쯤 걸치게 둔다. 카드가 덮는 가운데를 피하면서
+  // 격자와 구면 음영이 디더링과 잘 맞는다.
   news: (ctx, c, r) => {
-    const band = Math.min(c * 0.1, r * 0.2)
-    const line = Math.max(2, Math.round(r * 0.012)) // 줄 두께
-    const gap = line * 2.6 // 줄 간격
+    const R = Math.min(r * 0.46, c * 0.3)
+    const cx = c * 0.06 // 왼쪽으로 밀어 일부를 화면 밖으로
+    const cy = r * 0.5
+    const line = Math.max(1, r * 0.004)
 
-    ctx.fillStyle = tone(FG_TONE)
-    for (let y = r * 0.06; y < r * 0.94; y += gap) {
-      // 마지막 줄은 문단 끝처럼 짧게 끊는다
-      const short = Math.random() < 0.16
-      const w = band * (short ? 0.45 + Math.random() * 0.2 : 1)
-      ctx.fillRect(0, y, w, line)
-      ctx.fillRect(c - w, y, w, line)
+    // 구면 음영. 빛은 오른쪽 위에서 든다.
+    const g = ctx.createRadialGradient(cx + R * 0.45, cy - R * 0.4, R * 0.05, cx, cy, R)
+    g.addColorStop(0, tone(0.92))
+    g.addColorStop(0.5, tone(0.6))
+    g.addColorStop(1, tone(0.16))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(cx, cy, R, 0, Math.PI * 2)
+    ctx.fill()
+
+    // 구 밖으로 선이 삐져나가지 않게 잘라 낸다
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(cx, cy, R, 0, Math.PI * 2)
+    ctx.clip()
+
+    ctx.strokeStyle = tone(FG_TONE)
+    ctx.lineWidth = line
+
+    // 위도선: 높이만 눌러 그린 타원
+    for (let i = -3; i <= 3; i++) {
+      const y = cy + (i / 4) * R
+      // 그 높이에서 구를 자른 단면의 반지름
+      const rx = Math.sqrt(Math.max(0, R * R - (y - cy) ** 2))
+      ctx.beginPath()
+      ctx.ellipse(cx, y, rx, rx * 0.22, 0, 0, Math.PI * 2)
+      ctx.stroke()
     }
+
+    // 경도선: 폭만 줄인 타원. 가장자리로 갈수록 납작해진다.
+    for (let i = 0; i < 6; i++) {
+      const rx = R * Math.cos((i / 6) * Math.PI)
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, Math.abs(rx), R, 0, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    ctx.restore()
+
+    // 오른쪽 위 가장자리의 광원
+    const flare = ctx.createRadialGradient(
+      cx + R * 0.72, cy - R * 0.62, 0,
+      cx + R * 0.72, cy - R * 0.62, R * 0.3,
+    )
+    flare.addColorStop(0, tone(1))
+    flare.addColorStop(1, tone(BG_TONE))
+    ctx.globalCompositeOperation = 'lighten'
+    ctx.fillStyle = flare
+    ctx.fillRect(cx, cy - R, R * 1.1, R)
+    ctx.globalCompositeOperation = 'source-over'
   },
 
   // 소개(메인) - 셸 프롬프트.

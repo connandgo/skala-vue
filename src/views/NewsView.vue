@@ -1,94 +1,59 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { fetchAiNews, timeAgo, RANGES, ALL_TOPICS } from '@/api/news.js'
+import { computed, onMounted, ref } from 'vue'
+import { fetchNews, timeAgo, RANGES, ALL_TOPICS } from '@/api/news.js'
 
 /**
- * AI 뉴스 - 일간 / 주간 다이제스트
+ * 뉴스
  *
- * 뉴스레터처럼 읽히게 만든다.
- *   머리기사 3건 -> 이번 호 한눈에 -> 갈래별 묶음
- * 점수순으로 쭉 늘어놓기만 하면 훑기는 쉬워도 "무슨 일이 있었는지"가 안 남는다.
+ *   일간 - 구글 뉴스에서 모은 국내 AI 기사를 갈래별로
+ *   주간 - GeekNews Weekly 최신 호를 그 구성 그대로
+ *          (머리글 -> 에디터 글 -> 이번 주 주요 뉴스)
  */
 
 const range = ref('weekly')
-const items = ref([])
-const failedQueries = ref([])
+const daily = ref([])
+const weekly = ref(null)
+const fetchedAt = ref(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 
-const load = async () => {
-  isLoading.value = true
-  errorMessage.value = ''
+onMounted(async () => {
   try {
-    const { list, failed } = await fetchAiNews(range.value)
-    items.value = list
-    failedQueries.value = failed
+    const data = await fetchNews()
+    daily.value = data.daily
+    weekly.value = data.weekly
+    fetchedAt.value = data.fetchedAt
   } catch (err) {
     console.error('[news] 조회 실패:', err)
     errorMessage.value = err.message
-    items.value = []
   } finally {
     isLoading.value = false
   }
-}
-
-watch(range, load)
-onMounted(load)
-
-const fmt = (d) => `${d.getMonth() + 1}월 ${d.getDate()}일`
-
-/** "8월 1일 – 8월 5일" 처럼 이번 호가 다루는 기간 */
-const period = computed(() => {
-  const now = new Date()
-  const from = new Date(Date.now() - RANGES[range.value].hours * 3600 * 1000)
-  return range.value === 'daily' ? fmt(now) : `${fmt(from)} – ${fmt(now)}`
 })
 
-// 머리기사와 본문을 나눈다
-const headline = computed(() => items.value.slice(0, 3))
-const body = computed(() => items.value.slice(3))
-
-/** 갈래별로 묶는다. 비어 있는 갈래는 내보내지 않는다. */
-const groups = computed(() =>
+/** 일간은 갈래별로 묶는다. 비어 있는 갈래는 내보내지 않는다. */
+const dailyGroups = computed(() =>
   ALL_TOPICS.map((t) => ({
     ...t,
-    items: body.value.filter((i) => i.topic === t.id),
+    items: daily.value.filter((i) => i.topic === t.id),
   })).filter((g) => g.items.length),
 )
 
-const digest = computed(() => {
-  if (!items.value.length) return null
-
-  // 가장 많이 실린 갈래 (머리기사까지 포함해서 센다)
-  const tally = {}
-  for (const i of items.value) tally[i.topic] = (tally[i.topic] ?? 0) + 1
-  const topId = Object.entries(tally).sort((a, b) => b[1] - a[1])[0][0]
-
-  // 가장 자주 등장한 언론사
-  const sources = {}
-  for (const i of items.value) {
-    if (i.source) sources[i.source] = (sources[i.source] ?? 0) + 1
-  }
-
-  return {
-    count: items.value.length,
-    topTopic: ALL_TOPICS.find((t) => t.id === topId)?.label ?? '-',
-    topTopicCount: tally[topId],
-    topSources: Object.entries(sources)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3),
-  }
-})
+const today = computed(() =>
+  new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }),
+)
 </script>
 
 <template>
   <div class="news">
-    <!-- 발행 머리말 -->
+    <!-- 머리글 -->
     <header class="masthead">
       <div>
-        <span class="eyebrow">AI Digest</span>
-        <h1 class="page-title">AI 뉴스</h1>
-        <p class="period">{{ RANGES[range].label }} · {{ period }}</p>
+        <span class="eyebrow">Digest</span>
+        <h1 class="page-title">뉴스</h1>
+        <p class="period">
+          {{ range === 'daily' ? `일간 · ${today}` : `주간 · ${weekly?.period ?? ''}` }}
+        </p>
       </div>
 
       <div class="actions">
@@ -103,85 +68,116 @@ const digest = computed(() => {
             {{ r.label }}
           </button>
         </div>
-        <button :disabled="isLoading" @click="load">
-          {{ isLoading ? '수집 중…' : '새로고침' }}
-        </button>
+        <span v-if="fetchedAt" class="stamp">
+          {{
+            fetchedAt.toLocaleString('ko-KR', {
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          }}
+          수집
+        </span>
       </div>
     </header>
 
     <p v-if="errorMessage" class="state-msg error">{{ errorMessage }}</p>
-    <p v-else-if="isLoading" class="state-msg">이번 호를 모으는 중입니다…</p>
+    <p v-else-if="isLoading" class="state-msg">이번 호를 여는 중입니다…</p>
 
-    <template v-else-if="items.length">
-      <!-- 이번 호 한눈에 -->
-      <section v-if="digest" class="digest">
-        <p class="digest-line">
-          이번 호는 <b>{{ digest.count }}건</b>입니다. 가장 많이 다뤄진 갈래는
-          <b>{{ digest.topTopic }}</b>({{ digest.topTopicCount }}건)입니다.
-        </p>
-        <p class="digest-src">
-          자주 등장한 언론사 —
-          <span v-for="([name, n], i) in digest.topSources" :key="name">
-            <template v-if="i">, </template>{{ name }} ({{ n }})
-          </span>
-        </p>
-      </section>
+    <!-- ==================== 주간 ==================== -->
+    <template v-else-if="range === 'weekly'">
+      <template v-if="weekly">
+        <!-- 대표 글: 이번 호 제목 + 에디터 글 -->
+        <section class="lead">
+          <h2 class="lead-title">{{ weekly.title }}</h2>
 
-      <!-- 머리기사 -->
-      <section class="lead">
-        <h2 class="sec-title">머리기사</h2>
-        <article v-for="(item, i) in headline" :key="item.id" class="lead-item">
-          <span class="rank">{{ i + 1 }}</span>
-          <div>
-            <a :href="item.url" target="_blank" rel="noopener noreferrer" class="lead-title">
-              {{ item.title }}
-            </a>
-            <p class="meta">
-              <span class="source">{{ item.source }}</span>
-              <span>{{ timeAgo(item.date) }}</span>
-            </p>
+          <div class="editorial">
+            <p v-for="(p, i) in weekly.editorial" :key="i">{{ p.text }}</p>
           </div>
-        </article>
-      </section>
 
-      <!-- 갈래별 -->
-      <section v-for="g in groups" :key="g.id" class="topic">
-        <h2 class="sec-title">
-          {{ g.label }}
-          <span class="sec-count">{{ g.items.length }}</span>
-        </h2>
-        <p class="sec-hint">{{ g.hint }}</p>
+          <!-- 에디터 글에서 언급된 글로 바로 갈 수 있게 -->
+          <div v-if="weekly.editorial.some((p) => p.links.length)" class="mentioned">
+            <span class="mentioned-label">본문에 언급된 글</span>
+            <template v-for="p in weekly.editorial" :key="p.text">
+              <a
+                v-for="l in p.links"
+                :key="l.url"
+                :href="l.url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ l.label }}
+              </a>
+            </template>
+          </div>
+        </section>
 
-        <ul>
-          <li v-for="item in g.items" :key="item.id">
-            <span class="source-col">{{ item.source }}</span>
-            <div class="row-body">
-              <a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
-              <p class="meta">
-                <span>{{ timeAgo(item.date) }}</span>
-              </p>
-            </div>
-          </li>
-        </ul>
-      </section>
+        <!-- 이번 주 주요 뉴스 -->
+        <section class="topic">
+          <h2 class="sec-title">
+            이번 주 주요 뉴스
+            <span class="sec-count">{{ weekly.items.length }}</span>
+          </h2>
+          <p class="sec-hint">{{ weekly.period }}</p>
 
-      <p v-if="failedQueries.length" class="state-msg small">
-        일부 검색어를 못 받았습니다: {{ failedQueries.join(', ') }}
-      </p>
+          <ol class="list">
+            <li v-for="item in weekly.items" :key="item.id">
+              <a :href="item.url" target="_blank" rel="noopener noreferrer" class="item-title">
+                {{ item.title }}
+              </a>
+              <p class="summary">{{ item.summary }}</p>
+            </li>
+          </ol>
+        </section>
+
+        <footer class="colophon">
+          출처 ·
+          <a :href="weekly.url" target="_blank" rel="noopener noreferrer">
+            GeekNews Weekly {{ weekly.slug }}
+          </a>
+          제목과 요약문은 GeekNews가 작성한 것입니다. 제목을 누르면 원문으로 이동합니다.
+        </footer>
+      </template>
+
+      <p v-else class="state-msg">주간 호를 불러오지 못했습니다.</p>
     </template>
 
-    <p v-else class="state-msg">이 기간에 해당하는 글이 없습니다.</p>
+    <!-- ==================== 일간 ==================== -->
+    <template v-else>
+      <template v-if="daily.length">
+        <section v-for="g in dailyGroups" :key="g.id" class="topic">
+          <h2 class="sec-title">
+            {{ g.label }}
+            <span class="sec-count">{{ g.items.length }}</span>
+          </h2>
 
-    <footer class="colophon">
-      출처 ·
-      <a href="https://news.google.com" target="_blank" rel="noopener noreferrer">구글 뉴스</a>
-      RSS (rss2json 경유). 국내 언론사 기사를 모아 제목의 낱말로 주제를 나누고 최신순으로 정렬합니다.
-    </footer>
+          <ul class="plain">
+            <li v-for="item in g.items" :key="item.id">
+              <span class="source-col">{{ item.source }}</span>
+              <div class="row-body">
+                <a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+                <p class="meta">{{ timeAgo(item.date) }}</p>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <footer class="colophon">
+          출처 ·
+          <a href="https://news.google.com" target="_blank" rel="noopener noreferrer">구글 뉴스</a>
+          RSS. AI · 인공지능 · 생성형 AI · OpenAI · AI 반도체 다섯 갈래로 검색해 합친 뒤 최신순으로
+          정렬합니다.
+        </footer>
+      </template>
+
+      <p v-else class="state-msg">오늘 수집된 기사가 없습니다.</p>
+    </template>
   </div>
 </template>
 
 <style scoped>
-/* ---------------- 머리말 ---------------- */
+/* ---------------- 머리글 ---------------- */
 .masthead {
   display: flex;
   align-items: flex-end;
@@ -219,10 +215,6 @@ const digest = computed(() => {
   gap: 10px;
 }
 
-.actions > button {
-  margin: 0;
-}
-
 .range {
   display: inline-flex;
 }
@@ -244,29 +236,73 @@ const digest = computed(() => {
   color: var(--bg);
 }
 
-/* ---------------- 이번 호 한눈에 ---------------- */
-.digest {
-  padding: 18px 20px;
-  margin: 24px 0 8px;
-  border-left: 3px solid var(--text);
-  background: var(--bg-subtle);
-}
-
-.digest-line {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.75;
-}
-
-.digest-line b {
-  font-weight: 700;
-}
-
-.digest-src {
-  margin: 8px 0 0;
+.stamp {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+
+/* ---------------- 주간 대표 글 ---------------- */
+.lead {
+  padding: 34px 0 30px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lead-title {
+  max-width: 22ch;
+  margin: 0 auto;
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.editorial {
+  max-width: 62ch;
+  margin: 28px auto 0;
+}
+
+.editorial p {
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  line-height: 1.85;
+}
+
+.editorial p:last-child {
+  margin-bottom: 0;
+}
+
+.mentioned {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 62ch;
+  margin: 22px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.mentioned-label {
+  margin-right: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.mentioned a {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.mentioned a:hover {
+  border-color: var(--hover-border);
+  color: var(--text);
 }
 
 /* ---------------- 섹션 ---------------- */
@@ -274,7 +310,7 @@ const digest = computed(() => {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 40px 0 0;
+  margin: 44px 0 0;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-strong);
   font-size: 1.05rem;
@@ -291,30 +327,30 @@ const digest = computed(() => {
 
 .sec-hint {
   margin: 8px 0 0;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-/* ---------------- 머리기사 ---------------- */
-.lead-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.rank {
-  flex: 0 0 auto;
   font-family: var(--font-mono);
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 0.74rem;
   color: var(--text-muted);
 }
 
-.lead-title {
+/* ---------------- 주간 목록 ---------------- */
+.list {
+  margin: 20px 0 0;
+  padding-left: 2.4em;
+}
+
+.list > li {
+  margin-bottom: 24px;
+}
+
+.list > li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.item-title {
   display: block;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.45;
   letter-spacing: -0.01em;
@@ -322,18 +358,25 @@ const digest = computed(() => {
   text-decoration: none;
 }
 
-.lead-title:hover {
+.item-title:hover {
   text-decoration: underline;
 }
 
-/* ---------------- 갈래별 목록 ---------------- */
-.topic ul {
+.summary {
+  margin: 7px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
+/* ---------------- 일간 목록 ---------------- */
+.plain {
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.topic li {
+.plain li {
   display: flex;
   gap: 14px;
   padding: 10px 0;
@@ -341,7 +384,7 @@ const digest = computed(() => {
 }
 
 .source-col {
-  flex: 0 0 6.5em;
+  flex: 0 0 7em;
   padding-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -367,30 +410,11 @@ const digest = computed(() => {
   text-decoration: underline;
 }
 
-/* ---------------- 메타 ---------------- */
 .meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
   margin-top: 5px;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-muted);
-}
-
-.meta a {
-  color: var(--text-muted);
-}
-
-.meta a:hover {
-  color: var(--text);
-}
-
-.source {
-  max-width: 18em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ---------------- 상태 / 판권 ---------------- */
@@ -400,12 +424,6 @@ const digest = computed(() => {
   font-size: 0.85rem;
   color: var(--text-muted);
   text-align: center;
-}
-
-.state-msg.small {
-  padding: 16px 0 0;
-  font-size: 0.72rem;
-  text-align: left;
 }
 
 .state-msg.error {
@@ -418,7 +436,7 @@ const digest = computed(() => {
 }
 
 .colophon {
-  margin-top: 40px;
+  margin-top: 44px;
   padding-top: 16px;
   border-top: 3px double var(--border-strong);
   font-size: 0.74rem;
@@ -431,7 +449,7 @@ const digest = computed(() => {
     font-size: 1.8rem;
   }
   .lead-title {
-    font-size: 0.95rem;
+    font-size: 1.35rem;
   }
 }
 </style>
