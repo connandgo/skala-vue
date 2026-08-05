@@ -28,6 +28,13 @@ const FLOOR = 0.22
 const CEIL = 0.94
 const SRC = `${import.meta.env.BASE_URL}sky.jpg`
 
+// 원본 사진은 왼쪽이 빈 하늘이다.
+// 좌우를 뒤집은 사본을 살짝 어긋나게 겹쳐 왼쪽에도 구름을 만든다.
+// (그냥 뒤집어 겹치면 완전 대칭이라 인위적으로 보인다)
+const MIRROR_X = -0.16 // 가로로 밀 양 (화면 폭 비율)
+const MIRROR_Y = 0.14 // 세로로 밀 양
+const MIRROR_ZOOM = 0.82
+
 const DURATION = 3000 // 애니메이션 길이(ms)
 const TICK = 110 // 세대 간격(ms). 60fps로 돌릴 이유가 없다
 const SEED_DENSITY = 0.32
@@ -76,6 +83,21 @@ const buildTarget = () => {
   const dw = image.width * scale
   const dh = image.height * scale
   octx.drawImage(image, (cols - dw) / 2, (rows - dh) / 2, dw, dh)
+
+  // 좌우 반전 사본을 겹친다. 'lighten'이라 두 장 중 밝은 쪽만 남아
+  // 구름끼리 자연스럽게 이어지고 어두운 하늘은 덮이지 않는다.
+  const mw = dw * MIRROR_ZOOM
+  const mh = dh * MIRROR_ZOOM
+  const mx = (cols - mw) / 2 + MIRROR_X * cols
+  const my = (rows - mh) / 2 + MIRROR_Y * rows
+
+  octx.globalCompositeOperation = 'lighten'
+  octx.save()
+  octx.translate(mx + mw, my)
+  octx.scale(-1, 1) // 가로 뒤집기
+  octx.drawImage(image, 0, 0, mw, mh)
+  octx.restore()
+  octx.globalCompositeOperation = 'source-over'
 
   const data = octx.getImageData(0, 0, cols, rows).data
 
