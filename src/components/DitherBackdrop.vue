@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 /**
  * 배경: 구름 사진을 8x8 Bayer 디더링한 하프톤 + 콘웨이의 라이프 게임.
@@ -42,6 +43,69 @@ const MIRROR_X = -0.16 // 가로로 밀 양 (화면 폭 비율)
 const MIRROR_Y = 0.14 // 세로로 밀 양
 const MIRROR_ZOOM = 0.82
 
+/* ================================================================
+   라우트별 그림
+   - 홈은 구름 사진, 나머지는 도형을 톤(농담)으로 그린다
+   - 배경 0.30 / 도형 0.95 정도로 그리면 사진과 같은 결이 나온다
+   ================================================================ */
+const BG_TONE = 0.3
+const FG_TONE = 0.95
+
+const SHAPES = {
+  // 영화 - 필름 스트립이 화면을 가로로 관통
+  movies: (ctx, c, r) => {
+    const top = r * 0.28
+    const hgt = r * 0.44
+    const bar = hgt * 0.18
+
+    ctx.fillStyle = tone(FG_TONE)
+    ctx.fillRect(0, top, c, bar)
+    ctx.fillRect(0, top + hgt - bar, c, bar)
+
+    // 스프로킷 구멍 (띠를 뚫는다)
+    ctx.fillStyle = tone(BG_TONE)
+    const hw = c * 0.02
+    const hh = bar * 0.5
+    for (let x = c * 0.025; x < c; x += c * 0.07) {
+      ctx.fillRect(x, top + bar * 0.25, hw, hh)
+      ctx.fillRect(x, top + hgt - bar + bar * 0.25, hw, hh)
+    }
+  },
+
+  // 코드 챌린지 - 중괄호를 좌우 끝으로 벌린다
+  challenges: (ctx, c, r) => {
+    ctx.fillStyle = tone(FG_TONE)
+    ctx.font = `700 ${r * 0.66}px "IBM Plex Mono", monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('{', c * 0.13, r * 0.5)
+    ctx.fillText('}', c * 0.87, r * 0.5)
+  },
+
+  // 소개 - 로고 텍스트
+  about: (ctx, c, r) => {
+    ctx.fillStyle = tone(FG_TONE)
+    ctx.font = `800 ${r * 0.26}px "IBM Plex Mono", monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('SKALA', c * 0.5, r * 0.2)
+    ctx.fillText('SKALA', c * 0.5, r * 0.82)
+  },
+}
+
+/** 0~1 밝기를 회색 문자열로 */
+const tone = (v) => {
+  const g = Math.round(v * 255)
+  return `rgb(${g},${g},${g})`
+}
+
+const resolveShape = (path) => {
+  if (path.startsWith('/movies')) return SHAPES.movies
+  if (path.startsWith('/challenges')) return SHAPES.challenges
+  if (path.startsWith('/about')) return SHAPES.about
+  return null // 그 외에는 구름 사진
+}
+
 const DURATION = 3000 // 애니메이션 길이(ms)
 const TICK = 110 // 세대 간격(ms). 60fps로 돌릴 이유가 없다
 const SEED_DENSITY = 0.32
@@ -59,6 +123,7 @@ const BAYER8 = [
 ]
 
 const canvasRef = ref(null)
+const route = useRoute()
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 let image = null
@@ -79,12 +144,32 @@ let resizeTimer = null
 
 /* ---------------------------------------------------------------- 사진 */
 
-/** 사진을 격자 크기로 줄이고 Bayer 디더링해 목표 그림을 만든다 */
+/** 사진 또는 도형에서 밝기 지도를 만들고 Bayer 디더링해 목표 그림을 만든다 */
 const buildTarget = () => {
   const off = document.createElement('canvas')
   off.width = cols
   off.height = rows
   const octx = off.getContext('2d', { willReadFrequently: true })
+
+  const painter = resolveShape(route.path)
+  if (painter) {
+    // 배경에 옅은 세로 그라디언트를 깔아 밋밋하지 않게 한다
+    const g = octx.createLinearGradient(0, 0, 0, rows)
+    g.addColorStop(0, tone(BG_TONE + 0.06))
+    g.addColorStop(1, tone(BG_TONE - 0.06))
+    octx.fillStyle = g
+    octx.fillRect(0, 0, cols, rows)
+    painter(octx, cols, rows)
+  } else {
+    drawPhoto(octx)
+  }
+
+  finishTarget(octx)
+  return
+}
+
+/** 구름 사진을 좌우 반전본과 함께 그린다 */
+const drawPhoto = (octx) => {
 
   // background-size: cover 와 같은 방식으로 화면을 채운다
   const scale = Math.max(cols / image.width, rows / image.height)
@@ -106,7 +191,10 @@ const buildTarget = () => {
   octx.drawImage(image, 0, 0, mw, mh)
   octx.restore()
   octx.globalCompositeOperation = 'source-over'
+}
 
+/** 밝기 지도를 다듬어 디더링한다 (사진/도형 공통) */
+const finishTarget = (octx) => {
   const data = octx.getImageData(0, 0, cols, rows).data
 
   // 밝기만 뽑아 둔다
