@@ -1,6 +1,13 @@
 {
-  "fetchedAt": "2026-08-05T07:32:05.294Z",
+  "fetchedAt": "2026-08-05T07:35:39.260Z",
   "daily": [
+    {
+      "id": "한국외국어대학교,생성AI선도인재양성사업선정…국가AI연구이끈다",
+      "title": "한국외국어대학교, 생성AI 선도인재양성사업 선정…국가 AI 연구 이끈다",
+      "source": "전자신문",
+      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTFB5M1ozNGtyaGhpbTJLMFJhV2xmQV9rdkNqOGZ5MHFRdV9Vb1pZbUotNzg0a0JXc0V5amVoM1dDQlZ0ZmRudFJ6bEI4U3AzQQ?oc=5",
+      "published": "2026-08-05T07:26:45.000Z"
+    },
     {
       "id": "고령군평생교육지도자협의회,AI활용역량강화교육",
       "title": "고령군 평생교육지도자협의회, AI 활용 역량강화 교육",
@@ -100,6 +107,13 @@
       "published": "2026-08-05T07:11:28.000Z"
     },
     {
+      "id": "흥덕종합사회복지관,AI안부확인으로주말돌봄강화",
+      "title": "흥덕종합사회복지관, AI 안부확인으로 주말 돌봄 강화",
+      "source": "문경시민신문",
+      "url": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9yLVM3ME00WUV5VjNwSGFiWFNRWXFHMm1kRHBiazMtQW1zel9WS29qSHNHczdrMEZiakdtY3FrTlEybjRVb2ZkdHY2blJpQmU1ZVp0TnlvYk9tU2E5bWowRExyVkpvMXBUVm9oQm9RcnZ6MnRZMHpwRlVDOA?oc=5",
+      "published": "2026-08-05T07:11:00.000Z"
+    },
+    {
       "id": "악성코드심으려가짜신원까지만들었다…AI의섬뜩한일탈",
       "title": "악성코드 심으려 가짜 신원까지 만들었다…AI의 섬뜩한 일탈",
       "source": "조세일보",
@@ -149,6 +163,13 @@
       "published": "2026-08-05T07:06:13.000Z"
     },
     {
+      "id": "한국전력기술,자체개발바이브코딩서비스‘NEXACODE’정식운영",
+      "title": "한국전력기술, 자체 개발 바이브 코딩 서비스 ‘NEXA CODE’ 정식 운영",
+      "source": "시사브리핑",
+      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE50bXhxN0ljMDJzX3ZRVVNoSGlTY0JNUWJkZE54ZXlOdDZCQ3I0dm1JS0JDOGJkbHF2LXk0Z09zclhxdEhqTThSUTlUaTU1NVdjdGhIcmRvV19LYXN0dzhZVFpJYW5wc2hK?oc=5",
+      "published": "2026-08-05T07:04:52.000Z"
+    },
+    {
       "id": "삼성‘zHBM'vs하닉‘HBF’…차세대AI메모리경쟁본격화",
       "title": "삼성 ‘zHBM' vs 하닉 ‘HBF’…차세대 AI 메모리 경쟁 본격화",
       "source": "뉴스토마토",
@@ -170,17 +191,17 @@
       "published": "2026-08-05T07:02:40.000Z"
     },
     {
-      "id": "LG엑사원,中企제조현장'전파'…대기업과협력사AI상생시동",
-      "title": "LG 엑사원, 中企 제조현장 '전파'…대기업과 협력사 AI 상생 시동",
-      "source": "전자신문",
-      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE56TjEzTWtxT2MtTWdRS192V20wLVhGcnJGdE45aGtkc2lwdjRLcC1UV1lSSW5nYlFhTHR5VjNwSmQwN0pqNy1yZ0YxS0RSQQ?oc=5",
-      "published": "2026-08-05T07:00:00.000Z"
-    },
-    {
       "id": "[혁신플랫폼톡]AI음악산업,생성경쟁을넘어권리경쟁으로",
       "title": "[혁신플랫폼톡] AI 음악 산업, 생성 경쟁을 넘어 권리 경쟁으로",
       "source": "전자신문",
       "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE9yZXFDTEpkSmR5UzE1Uk1xUXBlU1BCQl9hd3NNeUtha183VnUtUzQtQ0FxaXowNnNubVV1SkNOOHl2RDhOdXRqYlNaQnRWUQ?oc=5",
+      "published": "2026-08-05T07:00:00.000Z"
+    },
+    {
+      "id": "LG엑사원,中企제조현장'전파'…대기업과협력사AI상생시동",
+      "title": "LG 엑사원, 中企 제조현장 '전파'…대기업과 협력사 AI 상생 시동",
+      "source": "전자신문",
+      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE56TjEzTWtxT2MtTWdRS192V20wLVhGcnJGdE45aGtkc2lwdjRLcC1UV1lSSW5nYlFhTHR5VjNwSmQwN0pqNy1yZ0YxS0RSQQ?oc=5",
       "published": "2026-08-05T07:00:00.000Z"
     },
     {
@@ -189,33 +210,13 @@
       "source": "테크월드",
       "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE93QXdjWlh2NUlpd0xnZlBkekw3LVJEdVJPVS0zdDY0cTkyMEFja1JRS3FrQ3pkS19TbHBuQ1lYMFJDdWV6R3dXWTFka1RSQW80b3JJd2kzX1ZNQTAzRWlSb2ZKa0NLQktS?oc=5",
       "published": "2026-08-05T07:00:00.000Z"
-    },
-    {
-      "id": "[人사이트]남진우한양대교수“AI신약병목,K-문샷으로극복해개발속도10배향상”",
-      "title": "[人사이트] 남진우 한양대 교수 “AI 신약 병목, K-문샷으로 극복해 개발 속도 10배 향상”",
-      "source": "전자신문",
-      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTFBGVUFFWXVvVkpNb01xb1B1dVNPU0w4N3B2c0xCNjRoS1NSLTdSSncwT3FKZHlVYTAtelFaOFlFN2dVYXpJZTdyR2p2TjZGdw?oc=5",
-      "published": "2026-08-05T07:00:00.000Z"
-    },
-    {
-      "id": "일상대화알아듣는금융AI…대고객서비스시작",
-      "title": "일상 대화 알아듣는 금융 AI…대고객 서비스 시작",
-      "source": "지디넷코리아",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE4xNVFYNndyeU1BczNKSFM2WnFvbHROUGNCQ1VjUWg0aXpGRTdWMFBSN3JRWkw3cTBld1dKMGEyYWE3VDgwM3lXbThmZ2lpQjhkZGZpTmhn?oc=5",
-      "published": "2026-08-05T06:57:20.000Z"
-    },
-    {
-      "id": "퓨리오사AI이어리벨리온…아이에이,‘네오큐브’NPU실증확대",
-      "title": "퓨리오사AI 이어 리벨리온…아이에이, ‘네오큐브’ NPU 실증 확대",
-      "source": "디지털데일리",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFBuS1g3NncySDVzYkxka3ZwOHN3M3AzbUNaeUp3Q2tGVkVrUE0tZjIxeTZDZWttV1ZFNHRYOUw1ZlpGVkJ3Y2ctaE84cU13REZubFdSNDlyOVZUWkc4UTVsdEl2SlU?oc=5",
-      "published": "2026-08-05T06:56:09.000Z"
     }
   ],
   "weekly": {
     "slug": "202631",
+    "issue": "GN#369",
     "url": "https://news.hada.io/weekly/202631",
-    "title": "[GN#369] 지표가 좋아 보이는 회사가 성장을 멈추는 이유",
+    "title": "지표가 좋아 보이는 회사가 성장을 멈추는 이유",
     "period": "2026-07-27 – 2026-08-02",
     "editorial": [
       {

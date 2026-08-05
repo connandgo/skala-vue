@@ -134,7 +134,10 @@ const fetchWeekly = async () => {
   const url = `${WEEKLY_INDEX}/${slug}`
   const page = await get(url)
 
-  const title = stripTags(inner(page, 'h2'))
+  // "[GN#369] 제목" 에서 호수를 떼어 따로 보관한다
+  const rawTitle = stripTags(inner(page, 'h2'))
+  const issue = rawTitle.match(/\[(GN#\d+)\]/)?.[1] ?? ''
+  const title = rawTitle.replace(/^\[GN#\d+\]\s*/, '')
 
   // 에디터 글
   const editorialHtml = page.match(
@@ -158,7 +161,7 @@ const fetchWeekly = async () => {
 
   if (!items.length) throw new Error('주간 항목을 찾지 못했습니다.')
 
-  return { slug, url, title, period, editorial: toParagraphs(editorialHtml), items }
+  return { slug, issue, url, title, period, editorial: toParagraphs(editorialHtml), items }
 }
 
 /* ---------------------------------------------------------------- 실행 */

@@ -42,6 +42,13 @@ const dailyGroups = computed(() =>
 const today = computed(() =>
   new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }),
 )
+
+/** 두 갈래가 무엇을 위한 것인지 한 줄로 알려 준다 */
+const lede = computed(() =>
+  range.value === 'daily'
+    ? '오늘 나온 국내 AI 기사를 모았습니다. 지금 무슨 일이 벌어지고 있는지 훑어보세요.'
+    : '한 주의 흐름을 짚는 뉴스레터입니다. 지난 일주일간 개발자들이 가장 많이 읽은 글과, 그 흐름을 엮어 정리한 글을 함께 싣습니다.',
+)
 </script>
 
 <template>
@@ -50,10 +57,11 @@ const today = computed(() =>
     <header class="masthead">
       <div>
         <span class="eyebrow">Digest</span>
-        <h1 class="page-title">뉴스</h1>
+        <h1 class="page-title">AI 뉴스</h1>
         <p class="period">
           {{ range === 'daily' ? `일간 · ${today}` : `주간 · ${weekly?.period ?? ''}` }}
         </p>
+        <p class="lede">{{ lede }}</p>
       </div>
 
       <div class="actions">
@@ -134,7 +142,7 @@ const today = computed(() =>
         <footer class="colophon">
           출처 ·
           <a :href="weekly.url" target="_blank" rel="noopener noreferrer">
-            GeekNews Weekly {{ weekly.slug }}
+            GeekNews Weekly {{ weekly.issue }}
           </a>
           제목과 요약문은 GeekNews가 작성한 것입니다. 제목을 누르면 원문으로 이동합니다.
         </footer>
@@ -206,6 +214,14 @@ const today = computed(() =>
   margin-top: 6px;
   font-family: var(--font-mono);
   font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.lede {
+  max-width: 46ch;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  line-height: 1.7;
   color: var(--text-muted);
 }
 
